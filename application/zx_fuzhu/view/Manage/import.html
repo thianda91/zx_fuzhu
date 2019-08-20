@@ -1,0 +1,102 @@
+{extend name="common@Public/base" /} {block name="leftmenu"} {include file="Common/leftmenu_zx_apply_manage" /} {/block}{block
+name="main"}
+<div class="htmltitle">
+	<span class="h2" style="margin-right:50px">专线申请表录入</span>
+</div>
+<div id="pasteDiv">
+	<p>
+		请根据模板（
+		<a href="/sampleData/import-template-zx_apply.xlsx" title='点击下载模板' download="数据专线批量录入模板.xlsx">点击下载</a>）格式，填好后将数据（
+		<b>不带标题，可多行</b>）直接粘贴至下面文本框， 然后点击
+		<button id="btn_submit" class="btn btn-xs btn-primary">导入</button>
+	</p>
+	<div id="inp_area">
+		<textarea style="width: 100%; height: 300px; font-size: 10px; font-family: Arial, sans-serif, '宋体'; color: #936;" placeholder="粘贴到这里~"></textarea>
+	</div>
+</div>
+<div id="fillInNotice">
+	还可以
+	<a href="../index/apply.html" class="btn btn-xs btn-link">手动录入</a>
+</div>
+<div id="fillInDiv" style="display: none;">
+	<div id="_form"></div>
+
+
+</div>
+<div id="ht_table"></div>
+<!-- <div id="griddiv" style="height: 100%;overflow: auto;"><div id="gridbox"></div></div>
+<div id="myForm" style="width: 450px;"></div> -->
+<script>
+	$(function () {
+		//
+	});
+	$("#btn_submit").on("click", function () {
+		var items = $("#inp_area textarea").val().trim();
+		if (items == "") {
+			dhtmlx.message({ text: "你还没有粘贴数据。。。" });
+			$("#inp_area textarea").focus();
+		} else if (items.length < 70) {
+			dhtmlx.message({ text: "<b>内容有点儿少吧</b>。。。" });
+			dhtmlx.message({ text: "重新编辑一下？" });
+		} else {
+			confirmTable();
+		}//StandardPost(location.href,encodeURI(data));
+	});
+	function AsyncLoad(V_tag, V_src) {
+		if (V_tag == "script") {
+			var s = document.createElement('script');
+			s.type = 'text/javascript';
+			s.async = true;
+			s.src = V_src;
+
+		} else if (V_tag == "css") {
+			var s = document.createElement('link');
+			s.rel = 'stylesheet';
+			s.async = true;
+			s.href = V_src;
+		}
+		var h = document.getElementsByTagName('head')[0];
+		h.appendChild(s);
+	}
+
+	function confirmTable() {
+		//AsyncLoad("css","__STATIC__/handsontable-pro/handsontable.full.min.css");
+		//AsyncLoad("script","__STATIC__/handsontable-pro/handsontable.full.min.js");
+		// 去空格，半角逗号改全角逗号，替换双引号之间的回车为全角分号以及去除双引号本身
+		var ss = { k: Date.now(), v: $("#inp_area textarea").val().trim().replace(/ /g, "").replace(/,/g, "，").replace(/\"(.*)\n(.*)\"/, "$1；$2") };
+		// 使用 sessionStorage 传递 textarea 数据
+		var t = btoa("appInputVal_" + ss["k"]);
+		sessionStorage.setItem(t, ss["v"]);
+		myWins.attachViewportTo(document.getElementById("winVP"));
+		myWins.createWindow("_input", 0, 50, _htmlWidth, 550);
+		//myWins.createWindow("_input",0,50,_htmlWidth,_htmlHeight-70);
+		var text = "验证您的录入&nbsp;&nbsp;&nbsp;&nbsp;<button id='confirm-commit' class='btn btn-xs btn-success'>提交</button>&nbsp;&nbsp;&nbsp;&nbsp;<a onclick='win_close()'>返回重新录入</a>";
+		myWins.window("_input").setText(text);
+		myWins.window("_input").attachURL("_ht_apply?t=" + t);
+		$("#confirm-commit").on("click", function () {
+			var ifr = myWins.window("_input").getFrame();
+			ifr.contentWindow.document.getElementById("confirm-commit").click();
+		});
+	}
+	var myWins = new dhtmlXWindows();
+	function win_close() {
+		myWins.window("_input").close();
+		$("#inp_area textarea").select();
+	}
+	function StandardPost(url, args) {
+		var form = $("<form method='post'></form>");
+		form.attr({
+			"action": url
+		});
+		for (arg in args) {
+			var input = $("<input type='hidden'>");
+			input.attr({
+				"name": arg
+			});
+			input.val(args[arg]);
+			form.append(input);
+		}
+		$(document.body).append(form);
+		form.submit();
+	}	
+</script> {/block}

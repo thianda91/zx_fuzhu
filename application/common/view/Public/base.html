@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	{include file="common@c/common" /}
+	<title></title> {block name="head"} {/block}
+	<style>
+		.page {
+			position: absolute;
+			top: 0;
+			left: 0;
+			right: 0;
+			bottom: 0;
+			overflow: hidden;
+		}
+
+		.header {
+			position: absolute;
+			top: 0;
+			left: 0;
+			right: 0;
+			height: 50px;
+			line-height: 50px;
+			background-color: #088bff;
+			color: #eee;
+			left: 0;
+			right: 0;
+		}
+
+		.header a {
+			color: #eee;
+			text-decoration: none;
+		}
+
+		.header .nav {
+			position: absolute;
+			left: 20px;
+			bottom: 0;
+			height: 30px;
+			line-height: 30px;
+		}
+
+		.header .title {
+			position: relative;
+			left: 250px;
+			bottom: 0;
+			line-height: 50px;
+			font-size: 30px;
+			font-family: Microsoft YaHei, sans-serif;
+		}
+
+		.header .tools {
+			position: absolute;
+			right: 30px;
+			bottom: 0;
+			margin: 0 30px;
+			height: 30px;
+			line-height: 30px;
+		}
+
+		.header .tools ul,
+		.footer ul {
+			margin: 0;
+			padding: 0;
+		}
+
+		.header .tools ul li,
+		.footer ul li {
+			border: medium none;
+			list-style: none;
+			display: inline;
+			padding: 2px 10px;
+		}
+
+		.menuleft {
+			position: absolute;
+			top: 50px;
+			bottom: 20px;
+			left：0;
+			width: 150px;
+			border: 0;
+			background-color: #e4e4e4;
+		}
+
+		.menuleft .leftmenu {
+			padding: 15px;
+		}
+
+		.menuleft .leftmenu ul {
+			background-color: #fff;
+		}
+
+		.menuleft .leftmenu ul li {
+			list-style: none;
+		}
+
+		.menuleft ul a {
+			border-bottom: 1px solid #d4d4d4;
+			color: #2d00b1;
+		}
+
+		.main {
+			border: 0;
+			position: absolute;
+			top: 50px;
+			bottom: 20px;
+			left: 150px;
+			right: 10px;
+			overflow: auto;
+			padding-left: 5px;
+		}
+
+		.main .htmltitle {
+			margin-top: 15px;
+		}
+
+		.main .content {
+			/*overflow: hidden;*/
+		}
+
+		.footer {
+			position: absolute;
+			bottom: 0;
+			left: 0;
+			right: 0;
+			height: 20px;
+			line-height: 20px;
+			width: 100%;
+			background-color: #088bff;
+			color: #eee;
+		}
+	</style>
+	<style>
+		#load {
+			position: absolute;
+			top: 0;
+			bottom: 0;
+			left: 0;
+			right: 0;
+			z-index: 200;
+			display: none;
+		}
+
+		#load ._close {
+			position: absolute;
+			bottom: 20px;
+			left: 0;
+			height: 50px;
+			width: 50px;
+			font-size: 100px;
+			color: #000;
+			cursor: pointer;
+			line-height: 50px;
+			opacity: 0.2;
+		}
+
+		.spinner {
+			position: absolute;
+			top: 50%;
+			left: 50%;
+			margin-top: -100px;
+			margin-left: -300px;
+			text-align: center;
+		}
+
+		.spinner>div {
+			width: 200px;
+			height: 200px;
+			background-color: #67CF22;
+			border-radius: 100%;
+			display: inline-block;
+			-webkit-animation: bouncedelay 1.4s infinite ease-in-out;
+			animation: bouncedelay 1.4s infinite ease-in-out;
+			/* Prevent first frame from flickering when animation starts */
+			-webkit-animation-fill-mode: both;
+			animation-fill-mode: both;
+		}
+
+		.spinner .bounce1 {
+			-webkit-animation-delay: -0.32s;
+			animation-delay: -0.32s;
+		}
+
+		.spinner .bounce2 {
+			-webkit-animation-delay: -0.16s;
+			animation-delay: -0.16s;
+		}
+
+		@-webkit-keyframes bouncedelay {
+			0%,
+			80%,
+			100% {
+				-webkit-transform: scale(0.0)
+			}
+			40% {
+				-webkit-transform: scale(1.0)
+			}
+		}
+
+		@keyframes bouncedelay {
+			0%,
+			80%,
+			100% {
+				transform: scale(0.0);
+				-webkit-transform: scale(0.0);
+			}
+			40% {
+				transform: scale(1.0);
+				-webkit-transform: scale(1.0);
+			}
+		}
+	</style>
+</head>
+
+<body>
+	<div id="winVP" class="page">
+		<div id="load">
+			<div class="_close" onclick="document.getElementById('load').style.display='none'">×</div>
+			<div class="spinner">
+				<div class="bounce1"></div>
+				<div class="bounce2"></div>
+				<div class="bounce3"></div>
+			</div>
+		</div>
+		<div class="header">
+			<div class="nav">
+				<a href="/">返回首页</a>
+			</div>
+			<div class="title">{$title|default=""}</div>
+			<div class="tools">
+				<ul>
+					<li>您好。
+						<a href="">{$Think.session.user.name}</a>
+					</li>
+					<li style="color: #98c0ee;">|</li>
+					<li>
+						<a href="javascript:void();" onclick="aboutMe()">关于</a>
+					</li>
+					<li style="color: #98c0ee;">|</li>
+					<li>
+						<a href="loginout.html">退出</a>
+					</li>
+				</ul>
+			</div>
+		</div>
+		<div class="menuleft">
+			<div class="leftmenu">{block name="leftmenu"} {/block}</div>
+		</div>
+		<div class="main">
+			<div class="content">{block name="main"}主内容{/block}</div>
+		</div>
+		<div class="footer">
+			<ul>
+				<li>系统版本： {$version|default="dev"}</li>
+				<li style="color: #98c0ee;">|</li>
+				<li>版权： thianda</li>
+				<li style="color: #98c0ee;">|</li>
+				<li>邮箱： 1748104738@139.com</li>
+			</ul>
+		</div>
+	</div>
+</body>
+<script>
+	var resizePageHeight;
+	var dhxWins = new dhtmlXWindows();
+	var resizePage;
+
+	function _resize_page() {
+		_htmlHeight = document.documentElement ? document.documentElement.clientHeight :
+			document.body.clientHeight;
+		_htmlWidth = document.documentElement ? document.documentElement.clientWidth :
+			document.body.clientWidth;
+		if (_htmlHeight < 400 || _htmlWidth < 1320) {
+			dhtmlx.message({
+				text: "窗口过小，或显示不全，建议调整窗口大小。『当前页面大小：" + _htmlWidth + "*" +
+					_htmlHeight + "』",
+				expire: 6000
+			});
+		}
+		if (_htmlHeight < 400) {
+			_htmlHeight = 400;
+		}
+		resizePage();
+		dhtmlx.message({
+			type: "error",
+			text: "调整窗口大小可能会影响页面布局。建议刷新本页面。",
+			expire: 10000
+		});
+		/*$(".dhtmlx_message_area").removeAttr("style").css({
+			"right" : "50px",
+			"bottom" : "40px"
+		});*/
+	}
+	/*window.addEventListener("resize", function(event) {
+		throttle(_resize_page, null, 500, null, 1000);//函数节流、在common.html 
+		//_resize_page();
+	});*/
+	$(function () {
+		$(window).bind('resize', function () {
+			throttle(_resize_page, null, 500, null, 1500);
+		});
+		dhxWins.attachViewportTo("winVP"); //窗口可在全屏内活动
+		resizePage = function () {
+			$(".menuleft").css("height", _htmlHeight - 70 + "px");
+			$(".main").css("height", _htmlHeight - 70 + "px");
+			$(".main .content").css("height", _htmlHeight - 70 - 20 + "px");
+			$(".main").css("width", _htmlWidth - 150 + "px");
+		};
+		// 左菜单激活当前页并设置 document.title
+		var _a = $(".leftmenu ul li a");
+		document.title = "-{$title|default=''}-";
+		for (var i in _a) {
+			if (_a[i].href == location.href) {
+				_a[i].parentNode.className = "active";
+				document.title = _a[i].text + "-{$title|default=''}";
+				break;
+			}
+		}
+		//禁用 li.disabled 元素 click 事件
+		$(".leftmenu ul li.disabled").on("click", function () {
+			return false;
+		});
+		//拯救 dhtmlx Layout组件导致的body over-flow:hidden 失效的问题
+		$("body").removeClass("dhxwins_vp_auto");
+		resizePage();
+		$(document).ajaxStart(function () {
+			$("#load").show();
+		}).ajaxStop(function () {
+			$("#load").hide();
+		}).ajaxError(function (event, jqxhr, settings, thrownError) {
+			window.j = jqxhr;
+			var msg = jqxhr.responseText.replace(/[\t\r\n]/g,"").match(/\"info\">(.+<\/h1>)</);
+			if (msg) {
+				msg = msg[1];
+			}
+			dhtmlx.alert({
+				type: "alert-error",
+				title: event.type + ": " + thrownError,
+				text: settings.type + "<pre>" + settings.url + "</pre>[DATA]:<pre>" + decodeURI(settings.data) +
+					"</pre>" + msg,
+				width: "800px"
+			});
+		});
+	});
+
+	function aboutMe() {
+		dhtmlx.alert({
+			title: "关于本系统",
+			width: "600px",
+			text: "本系统开源在<a href='https://github.com/thianda91/zx_fuzhu' target='_blank'>Github</a>，遵循<a href='https://github.com/thianda91/zx_fuzhu/blob/master/LICENSE' target='_blank'>MIT协议</a>。<br>可查看<a href='https://github.com/thianda/phpweb/blob/master/CHANGELOG.md' target='_blank'>更新日志</a>，如有疑问请提交Issue。",
+		});
+	}
+</script> {block name="script"} {/block}
+
+</html>

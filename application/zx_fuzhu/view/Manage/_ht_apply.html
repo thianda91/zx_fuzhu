@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="UTF-8">
+	<title>_ht_</title>
+	<script src="__STATIC__/jquery.min.js"></script>
+	<link rel="STYLESHEET" type="text/css" href="__STATIC__/bootstrap/css/bootstrap.min.css">
+	<link rel="STYLESHEET" type="text/css" href="__STATIC__/handsontable-pro/handsontable.full.min.css">
+	<script src="__STATIC__/handsontable-pro/handsontable.full.min.js"></script>
+	<style>
+		.body {
+			position: absolute;
+			top: 0;
+			bottom: 0;
+			left: 0;
+			right: 0;
+			overflow: hidden;
+		}
+
+		#notice {
+			padding: 10px;
+		}
+	</style>
+</head>
+
+<body>
+	<div id="notice">
+		<p class="lead text-info">
+			请检查并调整信息的规范性，确认后即可
+			<button id="confirm-commit" class="btn btn-success">提 交</button>
+		</p>
+		<hr />
+		<p id="xhr_response" class="text-primary"></p>
+	</div>
+	<div id='inp_area'></div>
+	<div>
+		<p></p>
+	</div>
+</body>
+<script>
+	var colHeaderData = "{$colHeaderData}";
+	var colWidthsData = "{$colWidthsData}";
+	var zxTypeData = "互联网,营业厅,平安校园,点对点,卫生网,教育网,IMS,其他";
+	//var aStationData = "柴河局,西丰新局,西丰老局,昌图新局,昌图老局,开原老局,开原新局,清河,调兵山新局,铁岭县,银州区";
+	var aStationData = "{$aStation}";
+	var neFactoryData = "华为,中兴";
+	var container = document.getElementById('inp_area');
+	var infoData = []; // 用于保存hot的初始数据
+	var hot;
+	// 获取数据
+	infoData = loadDataFromStorage(colHeaderData.split(","));
+	// 生成hot
+	hot = new Handsontable(container, {
+		data: infoData,
+		rowHeaders: true,
+		colWidths: colWidthsData.split(","),
+		//autoColumnSize : true,
+		//filters : true,
+		//search : true,
+		//minSpareRows : 1,
+		manualColumnResize: true,
+		colHeaders: colHeaderData.split(","),
+		columns: [{
+			type: "date",
+			dateFormat: "YYYY-MM-DD",
+			correctFormat: true,
+			validator: "date"
+		}, {
+			// 实例标识
+			type: 'numeric'
+		}, {
+			// 专线类型
+			editor: 'select',
+			selectOptions: zxTypeData.split(","),
+		}, {
+
+		}, {
+			// 网元厂家
+			editor: 'select',
+			selectOptions: neFactoryData.split(","),
+		}, {
+			strict: true,
+			type: 'autocomplete',
+			source: aStationData.split(","),
+		}, {
+
+		}, {
+
+		}, {
+
+		}, {
+			//  vlan
+			type: 'numeric',
+
+		}, {
+			// ip
+			validator: ipValidatorRegexp,
+		}, {
+
+		}, {
+
+		}, {
+
+		}, {
+
+		}, {
+
+		}, {
+
+		}, {
+
+		}, {
+
+		}, {
+			//1
+			type: 'numeric',
+		}, {
+			//2
+			type: 'numeric',
+		}, {
+			//3
+			type: 'numeric',
+		}, {
+			//4
+			type: 'numeric',
+		}, {
+			//5
+		}, {
+			//6
+			type: 'numeric',
+		}, {
+			//7
+			type: 'numeric',
+		}, {
+			//8
+			type: 'numeric',
+		}, {
+			//9
+			type: 'numeric',
+		}],
+		contextMenu: {
+			callback: function (key, options) {
+				if (key === 'about') {
+					setTimeout(function () {
+						// timeout is used to make sure the menu collapsed before alert is shown
+						parent.dhtmlx.alert({
+							title: "特别鸣谢",
+							text: "本菜单由 Xianda 汉化。感谢Xianda"
+						});
+					}, 100);
+				}
+			},
+			items: {
+				"about": {
+					name: "*Power by Xianda*"
+				},
+				"hsep1": "---------",
+				"row_above": {
+					name: "在上面插入一行"
+				},
+				"row_below": {
+					name: "在下面插入一行"
+				},
+				"hsep1": "---------",
+				"col_left": {
+					name: "在左侧插入一列"
+				},
+				"col_right": {
+					name: "在右侧插入一列"
+				},
+				"hsep2": "---------",
+				"remove_row": {
+					name: "移除此行"
+				},
+				"remove_col": {
+					name: "移除此列"
+				},
+				"hsep3": "---------",
+				"undo": {
+					name: "撤销"
+				},
+				"redo": {
+					name: "还原"
+				},
+			},
+		}
+	});
+	hot.validateCells();
+	$(function ($) {
+
+	});
+	// 从sessionStorage获取数据
+	function loadDataFromStorage(colHeaders) {
+		var Param_t = getQueryString("t");
+		var data = [];
+		if (Param_t) {
+			console.log("loadDataFromStorage: success");
+			var items = sessionStorage.getItem(Param_t);
+			if (items) {
+				items = items.split("\n");
+				for (i in items) {
+					//对于每一行数据
+					var itemArr = items[i].split("\t");
+					/*var _data = [];
+					for ( var j in itemAttr) { // j一定是数字，且从0自增
+						_data[colHeaders[j]] = itemAttr[j];
+					}*/
+					if (/柴河/.test(itemArr[5])) {
+						if (itemArr[0].substr(0, 4) < 2017) {
+							itemArr[5] = "柴河局";
+						} else {
+							itemArr[5] = "柴河局" + "-" + itemArr[4];
+						}
+					}
+					data.push(itemArr);
+				}
+			}
+		} else {
+			console.info("loadDataFromStorage: failed");
+		}
+		return data;
+	}
+	var ipValidatorRegexp = /^(?:\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b|null)$/;
+	/* 获取url参数 */
+	function getQueryString(name) {
+		var reg = new RegExp('(^|&)' + name + '=([^&]*)(&|$)', 'i');
+		var r = window.location.search.substr(1).match(reg);
+		if (r != null) {
+			return unescape(r[2]);
+		}
+		return null;
+	}
+	//	确认录入提交
+	$("#confirm-commit")
+		.on(
+			"click",
+			function () {
+				var ht_data = hot.getPlugin("exportFile")
+					.exportAsString("csv");
+				// 导出的csv字符串会带有不可见的BOM，
+				// 在JavaScript中占一个单位，在php中占3个单位，
+				// 把它去掉，解决了每次传递csv格式数据第一行的第一列的数据总会有异常的bug
+				ht_data = ht_data.substr(1);
+				var _data = {
+					data: ht_data,
+					type: "import",
+				};
+				// 页面滚动到左上角位置
+				pageScroll();
+				$.post(
+					"",
+					_data,
+					function (data) {
+						$("#xhr_response")
+							.html(data)
+							.before(
+								"<p>下面是存入结果：若为空则导入失败，请联系管理员。导入结束可点击右上方关闭本弹窗。</p>");
+					});
+			});
+	function pageScroll() {
+		window.scrollBy(-5, -10);
+		scrolldelay = setTimeout('pageScroll()', 5);
+		if (document.documentElement.scrollTop == 0
+			&& document.documentElement.scrollLeft == 0) {
+			clearTimeout(scrolldelay);
+			window.scrollTo(0, 0);
+		}
+	}
+	////////
+	/*function a(){
+		console.log($(".wtHolder")[0].style.height);
+		$(".wtHolder")[0].style.height="";
+		
+	}*/
+</script>
+
+</html>

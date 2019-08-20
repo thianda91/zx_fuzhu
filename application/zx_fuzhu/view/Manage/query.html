@@ -1,0 +1,1187 @@
+{extend name="common@Public/base" /} {block name="head"}
+<link rel="STYLESHEET" type="text/css" href="__STATIC__/handsontable-pro/handsontable.full.min.css">
+<script src="__STATIC__/handsontable-pro/handsontable.full.min.js"></script> {/block} {block name="leftmenu"} {include file="Common/leftmenu_zx_apply_manage" /} {/block} {block name="main"}
+<div class="htmltitle">
+    <span class="h2" style="margin-right: 50px">信息查询</span>
+    <span>请选择类别：</span>
+    <span id="btn-group" class="btn-group">
+		<button class="btn btn-sm btn-default active" name="互联网">互联网</button>
+		<button class="btn btn-sm btn-default" name="营业厅">营业厅</button>
+		<button class="btn btn-sm btn-default" name="卫生网">卫生网</button>
+		<button class="btn btn-sm btn-default" name="平安校园">平安校园</button>
+	</span>
+    <span>
+		<a class='btn btn-link' onclick='showInfoWin()'>9312互联端口明细</a>
+	</span>
+    <label class="checkbox-inline" for="usePHP">
+		<input id="usePHP" type="checkbox">后端导出(默认为前端)
+	</label>
+</div>
+<div style="margin-top: 10px; margin-bottom: 3px;">
+    <form class="form-inline" onsubmit="javascript:return false;">
+        <div class="form-group has-success">
+            <select id="colName" class="form-control">
+				<option value="cName">客户名</option>
+				<option value="instanceId">实例标识</option>
+				<option value="vlan">vlan</option>
+				<option value="status">状态</option>
+			</select>
+            <input type="text" class="form-control" id="searchStr">
+        </div>
+        <button id="btn-search" type="submit" class="btn btn-default" data-toggle="tooltip" data-placement="top" title="当前页搜索不限制列名，可搜索任意字段">当前页搜索</button>
+        <button id="btn-searchAll" class="btn btn-default" data-toggle="tooltip" data-placement="top" title="全局搜索需根据列名搜索">全局搜索</button>
+        <div id="tips" class="form-group" style="display: none; margin-left: 20px;">
+            <span id="tips-text" class="text-primary"></span>
+            <button id="tips-btn" class="btn btn-xs btn-primary">定位到下一个</button>
+        </div>
+        <div id="tips-msg" class="form-group text-muted" style="margin-left: 20px;"></div>
+    </form>
+</div>
+<div class="fixed-container" style="overflow: hidden; visibility: hidden;">
+    <div id='queryTable'></div>
+</div>
+<div id="the93_info" style="display: none; color: blue;">
+    <table class="table table-striped table-condensed">
+        <tbody>
+        </tbody>
+    </table>
+</div>
+{/block} {block name="script"}
+<script>
+    $.ajaxSetup({
+        cache: true,
+    });
+    $(function($) {
+        //$(".wtHolder")[0].style.height="";	//修复wtHolder层（handsontable右键菜单）height过大。
+        $(".fixed-container").css("height", (_htmlHeight - 170) + "px");
+        var tt = Date.now();
+        initHandsontable(infoData);
+        initSearch();
+        sessionStorage.setItem("tableStatus", "yes");
+        initStatusSync();
+        console.info("\t\t渲染用时:", Date.now() - tt, "ms");
+        hot.initTimes = Date.now();
+        $('[data-toggle="tooltip"]').tooltip();
+        $("#btn-group button").on("click", typeSelected);
+    });
+    dhtmlx.message({
+        id: "_msg",
+        text: "loading..."
+    });
+    var _loading = setTimeout(function() {
+        dhtmlx.message.hide("_msg");
+        dhtmlx.message({
+            id: "_msg",
+            text: "数据加载完毕~<hr>数据验证用时:    " + (Date.now() - hot.initTimes) / 1000 + " s"
+        });
+        $(".fixed-container").css("visibility", "");
+        console.info("\t\t数据验证用时:", Date.now() - hot.initTimes, "ms");
+    }, 500);
+    /* 专线类型选择 */
+    function typeSelected() {
+        checkWindows("_input");
+        $("#searchStr").val("");
+        $(this).addClass("active").siblings().removeClass("active");
+        $.post("", {
+            r: "info",
+            zxType: this.name
+        }, function(data) {
+            infoData = adjustInfo(data);
+            hot.updateSettings({
+                data: infoData
+            });
+            hot.validateCells();
+        });
+    }
+</script>
+<script id="renderHandsontable">
+    (function(Handsontable) {
+        function ipstr(value, callback) {
+            if (value == null || value.length == 0) {
+                callback(true);
+                return;
+            }
+            var a = value.split("/");
+            var c = a[0].toString().match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+            var b = a.length == 1 ? true : a.length > 2 ? false : parseInt(a[1]) <= 32 && a[1].match(/^\d{0,2}$/);
+            callback(!!c && !!(c[1] <= 255 && c[2] <= 255 && c[3] <= 255 && c[4] <= 255) && !!b || false);
+        }
+        Handsontable.validators.registerValidator('my.ipstr', ipstr);
+    })(Handsontable);
+    var colWidthsData = "{$colWidthsData}";
+    var zxTypeData = "互联网,营业厅,平安校园,点对点,卫生网,教育网,IMS,其他";
+    //var aStationData = "柴河局,西丰新局,西丰老局,昌图新局,昌图老局,开原老局,开原新局,清河,调兵山新局,铁岭县,银州区";
+    var aStationData = "{$aStationData}";
+    var neFactoryData = "请选择,华为,中兴,ONU";
+    var colHeaderData = "{$colHeaderData}";
+    var container = document.getElementById('queryTable');
+    var infoData, hot, columnsData, contextMenuData;
+    infoData = {$data};
+    columnsData = [{
+        data: 'create_time',
+        type: "date",
+        dateFormat: "YYYY-MM-DD",
+        correctFormat: true,
+        validator: "date",
+        readOnly: true
+    }, {
+        data: 'instanceId',
+        type: 'numeric'
+            /*}, {
+            	data: 'zxType',
+            	editor: 'select',
+            	selectOptions: zxTypeData.split(","),
+            }, {
+            	data: 'bandWidth',*/
+    }, {
+        data: 'neFactory',
+        editor: 'select',
+        selectOptions: neFactoryData.split(","),
+    }, {
+        data: 'aStation',
+        strict: true,
+        type: 'autocomplete',
+        source: aStationData.split(","),
+        //editor : 'select',
+        //selectOptions : aStationData.split(","),
+    }, {
+        data: 'cName',
+        allowEmpty: false
+            /*}, {
+            	data : 'cAddress',
+            }, {
+            	data : 'cNeeds',*/
+    }, {
+        data: 'vlan',
+        type: 'numeric',
+        validator: /^2[0-9]{3}$/,
+        readOnly: true
+            //allowEmpty: false
+    }, {
+        data: 'ip',
+        validator: "my.ipstr",
+        readOnly: true
+            /*}, {
+            	data : 'ipB',
+            	validator : "my.ipstr",
+            	readOnly: true
+            }, {
+            	data: 'cPerson',
+            }, {
+            	data: 'cPhone',
+            }, {
+            	data: 'cEmail',
+            }, {
+            	data: 'mPerson',
+            }, {
+            	data: 'mPhone',
+            }, {
+            	data: 'mEmail',
+            }, {
+            	data: 'marks',*/
+    }, {
+        data: 'ifOnu',
+        editor: 'select',
+        selectOptions: [0, 1],
+        /*}, {
+        	data: 'oltName',
+        }, {
+        	data: 'extra.unitProperty',
+        	type: 'numeric',
+        }, {
+        	data: 'extra.unitCategory',
+        	type: 'numeric',
+        }, {
+        	data: 'extra.industryCategory',
+        	type: 'numeric',
+        }, {
+        	data: 'extra.credential',
+        	type: 'numeric',
+        }, {
+        	data: 'extra.credentialnum',
+        }, {
+        	data: 'extra.province',
+        	type: 'numeric',
+        }, {
+        	data: 'extra.city',
+        	type: 'numeric',
+        }, {
+        	data: 'extra.county',
+        	type: 'numeric',
+        }, {
+        	data: 'extra.appServType',
+        	type: 'numeric',*/
+    }, {
+        data: 'aPerson',
+        readOnly: true
+    }, {
+        data: 'aEmail',
+        readOnly: true
+    }, {
+        data: 'status',
+        type: 'numeric',
+        readOnly: true
+    }];
+    /* 初始化台账显示 */
+    function initHandsontable(infoData) {
+        if (typeof(hot) != "undefined")
+            hot = null;
+        container.innerHTML = null;
+        infoData = adjustInfo(infoData);
+        hot = new Handsontable(container, {
+            data: infoData,
+            rowHeaders: true,
+            colWidths: colWidthsData.split(","),
+            //autoColumnSize : true,
+            //filters : true,
+            search: true,
+            //minSpareRows : 1,
+            manualColumnResize: true,
+            colHeaders: colHeaderData.split(","),
+            columns: columnsData,
+        });
+        hot.validateCells();
+        hot.updateSettings({
+            contextMenu: {
+                callback: function(key, options) {
+                    hot.disableShowDetail = true;
+                    if (hot.getSelectedRange() === undefined) {
+                        dhtmlx.alert("空白处右键操作是无效的~");
+                    } else if (key === 'about') {
+                        setTimeout(function() {
+                            // timeout is used to make sure the menu collapsed before alert is shown
+                            parent.dhtmlx.alert({
+                                title: "特别鸣谢",
+                                text: "本菜单由 X.Da 自定义。感谢 <a href='https://github.com/thianda' target='_blank'>X.Da</a>"
+                            });
+                        }, 100);
+                    } else if (key === 'fullUpdate') {
+                        fullUpdate();
+                    } else if (key === 'script') {
+                        $.post("", {
+                            _method: "PUT",
+                            r: key,
+                            id: getSelectedIds()
+                        }, function(data) {
+                            script(data);
+                        });
+                    } else if (key === 'show_status') {
+                        if (sessionStorage.getItem("tableStatus") == undefined) {
+                            sessionStorage.setItem("tableStatus", "yes");
+                            initStatusSync();
+                        } else {
+                            sessionStorage.removeItem("tableStatus");
+                            hot.render();
+                        }
+                    } else if (key === 'delete') {
+                        postDelete();
+                    } else if (key === 'export_all') {
+                        export_all();
+                    } else if (key === 'allDone') {
+                        updateStatusMulti(getSelectedIds(false), 5);
+                    } else {
+                        // 导出数据模板
+                        var r = new RegExp(',' + key + ',');
+                        if (r.test(',export_zg,export_jtip,export_gxbip,')) {
+                            put(key);
+                        }
+                    }
+                },
+                items: {
+                    "about": {
+                        name: "<b>**Power by Xianda</b>"
+                    },
+                    "hsep1": "---------",
+                    "fullUpdate": {
+                        name: "修改/查看"
+                    },
+                    "export_zg": {
+                        name: "1.资管流程数据导出"
+                    },
+                    "export_jtip": {
+                        name: "<span style='color:#999;'>2.集团IP备案数据导出</span>"
+                    },
+                    "export_gxbip": {
+                        name: "3.工信部IP备案数据导出"
+                    },
+                    "script": {
+                        name: "4.单条数据制作脚本生成",
+                        disabled: function() {
+                            var s = hot.getSelectedRange();
+                            var a = s && s.length > 1; // 多选时禁用
+                            var b = s && s[0].from.row != s[0].to.row; // 多选时禁用
+                            var c = infoData[s[0].from.row].neFactory == 'ONU'; // ONU业务禁用
+                            var v = hot.currentRowValid && hot.currentRowValid.valid;
+                            return a || b || c || !v;
+                        }
+                    },
+                    "undo": {
+                        name: "撤销修改"
+                    },
+                    "redo": {
+                        name: "还原修改"
+                    },
+                    "hsep2": "---------",
+                    "allDone": {
+                        name: "<b>批量已完成</b>"
+                    },
+                    "delete": {
+                        name: "**删除所选条目"
+                    },
+                    "show_status": {
+                        name: function() {
+                            var name;
+                            if (sessionStorage.getItem("tableStatus") == "yes") {
+                                name = "隐藏台账状态";
+                            } else {
+                                name = "显示台账状态";
+                            }
+                            return name;
+                        }
+                    },
+                    "export_all": {
+                        name: "导出台账（全量）"
+                    },
+                },
+            }
+        });
+        hot.updateSettings({
+            afterSelectionEndByProp: function(r, c, r2, c2) {
+                if (r == r2 && c == c2 && !dhxWins.isWindow("ccc")) {
+                    //console.log(r, c, r2, c2);
+                    showDetail(r);
+                }
+            },
+            afterOnCellMouseOver: function(event, coords, td) {
+                //console.log(event,coords,td);
+                hot.validateRows([coords.row], function(valid) {
+                    hot.currentRowValid = {
+                        row: coords.row,
+                        valid: valid
+                    }; // 触发设置当前行的验证结果
+                });
+            },
+            afterChange: function(changes, source) { // 修改后自动同步到数据库
+                var updates = {},
+                    _id = [],
+                    rows = [],
+                    hotData = hot.getSourceData();
+                for (var i in changes) { // 记录变化到 updates
+                    var _change = changes[i];
+                    if (_change[2] == _change[3]) {
+                        break;
+                    }
+                    console.log("really_change[" + i + "]", _change);
+                    _id.push(hotData[_change[0]].id);
+                    rows.push(_change[0]);
+                    var key = _change[1],
+                        value = _change[3],
+                        _update_key = _change[0] + "-" + _id[i];
+                    updates[_update_key] = {};
+                    updates[_update_key][_change[1]] = _change[3]; // example: updates={"16-17":{vlan:"2222",ip:"223.100.108.2"}}
+                }
+                if ($.isEmptyObject(updates)) { // 无变化，函数返回
+                    return;
+                }
+                console.log("afterChangeEnv:", changes, source);
+                if (sessionStorage.getItem("updateConfirm") == null) {
+                    dhtmlx.confirm({
+                        type: "confirm-warning",
+                        title: "您已修改台账信息，是否同步更新到服务器？",
+                        text: "确认后所有的修改会同步到服务器，本次登陆期间不再提醒。不会验证数据是否合规，慎用！！<br><br>【请注意】：若多人同时操作会以最后一次修改为准。操作请谨慎。。&nbsp;&nbsp;%^_^% +_+ %^_^%",
+                        ok: "确认",
+                        cancel: "撤销修改",
+                        callback: function(result) {
+                            if (result) {
+                                sessionStorage.setItem("updateConfirm", "auto");
+                                updateChanges(rows, updates);
+                            } else {
+                                hot.undo();
+                            }
+                        }
+                    });
+                } else {
+                    updateChanges(rows, updates);
+                }
+
+            },
+            afterRender: function() {
+                initStatusSync();
+            }
+        });
+    }
+    /* 调整填充数据中不存在的字段 */
+    function adjustInfo(infoData) {
+        var extra = "unitProperty,unitCategory,industryCategory,credential,credentialnum,province,city,county,appServType".split(
+            ",");
+        for (var i in infoData) {
+            if (infoData[i]["extra"] == undefined) {
+                infoData[i]["extra"] = [];
+            }
+            for (var j in extra) {
+                if (infoData[i]["extra"][extra[j]] == undefined) {
+                    infoData[i]["extra"][extra[j]] = "";
+                }
+            }
+        }
+        return infoData;
+    }
+    /* 同步修改的数据到服务器 用在afterChangeEnv */
+    function updateChanges(rows, updates) {
+        if (sessionStorage.getItem("updateConfirm") === null) {
+            return;
+        }
+        hot.validateRows(rows, function(valid) {
+            if (!valid) { // 验证修改是否符合验证规则
+                dhtmlx.confirm({
+                    text: "修改操作明显不合规，<b>建议修改合规后再试。</b>是否强制继续？",
+                    callback(result) {
+                        if (!result) {
+                            hot.undo();
+                            return;
+                        }
+                    }
+                });
+            }
+            postUpdate(updates);
+        });
+    }
+    /* 发起post请求更新台账信息，并同步在前端render 用于 updateChanges、updateStatus */
+    function postUpdate(updates) {
+        $.post("?r=update", updates, function(data) {
+            console.log("ajaxResponse_update", updates);
+            if (data.code) {
+                dhtmlx.message("成功同步至服务器条数：" + data.msg + "<br /><span style='color:red'>---<br />" + JSON.stringify(updates) +
+                    "<br />---</span>");
+                for (var i in data.data) {
+                    for (var ii in data.data[i]) {
+                        infoData[i.split("-")[0]][ii] = data.data[i][ii]; // 前端台账强制与服务器端更新同步
+                    }
+                }
+                hot.render();
+            } else {
+                dhtmlx.alert({
+                    text: data.msg,
+                    callback: function() {
+                        location.href = data.url
+                    }
+                }); //异常时跳转
+            }
+        });
+    }
+
+    function initSearch() {
+        $("#searchStr").on("focus", function() {
+            checkWindows("_input");
+        });
+        hot.search = hot.getPlugin('search');
+        /* 当前页搜索按钮 */
+        Handsontable.dom.addEvent(document.getElementById("searchStr"), "keyup", function() {
+            if (this.value == "") {
+                showTips("");
+            } else {
+                var result = hot.search.query(this.value);
+                if (result.length > 0) {
+                    if (result.length == 1) {
+                        //sessionStorage.removeItem("searchResult");
+                        showTips("1个结果。");
+                    } else {
+                        showTips("输入框按回车可定位到第一个。", result.length);
+                    }
+                } else {
+                    showTips("未找到");
+                }
+                sessionStorage.setItem("searchResult", JSON.stringify(result));
+                sessionStorage.setItem("searchResultSelectedIndex", 0);
+                checkWindows("_input");
+            }
+        });
+        $("#btn-search").on("click", function() {
+            var str = $("#searchStr").val();
+            if (str == "") {
+                showTips("");
+            } else {
+                var result = hot.search.query(str);
+                result.length == 0 && showTips("未找到");
+                result.length > 0 && selectCell(result);
+                sessionStorage.setItem("searchResult", JSON.stringify(result));
+                sessionStorage.setItem("searchResultSelectedIndex", 0);
+                checkWindows("_input");
+            }
+        });
+        /* 数据库搜索按钮 */
+        $("#btn-searchAll").on("click", function() {
+            var str = $("#searchStr").val();
+            var zxType = $(".htmltitle button.active").prop("name");
+            if (str == "") {
+                showTips("");
+                $.post("", {
+                    r: "info",
+                    zxType: zxType
+                }, function(data) {
+                    infoData = adjustInfo(data);
+                    hot.updateSettings({
+                        data: infoData
+                    });
+                    hot.validateCells();
+                });
+            } else {
+                showTips("");
+                var _where = [];
+                _where[0] = $("#colName").val();
+                _where[2] = str;
+                $.post("", {
+                    r: "search",
+                    where: _where,
+                    zxType: zxType
+                }, function(data) {
+                    infoData = adjustInfo(data);
+                    hot.updateSettings({
+                        data: infoData
+                    });
+                    hot.validateCells();
+                });
+            }
+        });
+        /* 定位下一个按钮 */
+        $("#tips-btn").on("click", function() {
+            var result = JSON.parse(sessionStorage.getItem("searchResult"));
+            var index = parseInt(sessionStorage.getItem("searchResultSelectedIndex"));
+            if (++index == result.length) {
+                index = 0;
+                dhtmlx.alert("返回到第一个搜索结果");
+            }
+            sessionStorage.setItem("searchResultSelectedIndex", index);
+            hot.selectCell(result[index].row, result[index].col);
+            hot.scrollViewportTo(result[index].row);
+            //!!index && $(".wtHolder")[0].scrollBy(0,50);
+            showTips("当前定位到第" + (index + 1) + "个结果。", result.length);
+            checkWindows("_input");
+        });
+    }
+    /* 定位数据 */
+    function selectCell(result) {
+        hot.selectCell(result[0].row, result[0].col);
+        hot.scrollViewportTo(result[0].row);
+    }
+    /* 按钮后面的提示信息 */
+    function showTips(msg, muti) {
+        if (typeof(muti) != "undefined") {
+            $("#tips-msg").html(msg);
+            $("#tips").fadeIn(500);
+            $("#tips-text").html("找到 " + muti + " 个结果。");
+        } else {
+            $("#tips-msg").html(msg);
+            $("#tips").fadeOut(500);
+        }
+    }
+    /* 显示单条数据详细信息 */
+    function showDetail(row) {
+        if (hot.disableShowDetail === true) {
+            hot.disableShowDetail = false;
+            checkWindows("_input");
+            return;
+        }
+        if (row < 0) {
+            checkWindows("_input");
+            return;
+        }
+        var d = infoData[row];
+        var keys = {
+            "instanceId": "实例标识",
+            "cName": "客户名",
+            "cAddress": "客户地址",
+            "cNeeds": "客户需求",
+            "bandWidth": "带宽",
+            "vlan": "VLAN",
+            "ip": "互联ip",
+            "ipB": "业务ip",
+            "ifOnu": "是否走Onu",
+            "oltName": "olt名称",
+            "marks": "备注",
+            "extra.unitAttribute": "单位属性",
+            "cPerson": "客户联系人",
+            "cPhone": "客户电话",
+            "cEmail": "客户邮箱",
+            "mPerson": "客户经理",
+            "mPhone": "客户经理电话",
+            "mEmail": "客户经理邮箱",
+            "extra.unitProperty": "单位性质id",
+            "extra.unitCategory": "单位分类id",
+            "extra.industryCategory": "行业分类id",
+            "extra.credential": "单位证件类型id",
+            "extra.credentialnum": "单位证件号",
+            "extra.province": "所在省id",
+            "extra.city": "所在市id",
+            "extra.county": "所在县区id",
+            "extra.appServType": "应用服务类型id",
+            "extra.unitAttribute": "单位属性",
+            "extra.securityPerson": "网络安全责任人",
+            "extra.securityPersonID": "责任人身份证号",
+            "extra.securityPhone": "责任人电话",
+            "extra.securityEmail": "责任人邮箱",
+            "extra.zipCode": "邮政编码",
+            "tags": "标签",
+            "status": "状态"
+        };
+        var str = '<div class="_detail_str container-fluid" style="padding-top:5px;font-size:12px;background-color:' +
+            backgroundColor[d.status] + ';position: relative;width: 100%;height: 370px;overflow: auto;">';
+        for (var i in keys) {
+            if (/\./.test(i)) {
+                var arr = i.split(".");
+                str += "<div class='row'><div class='col-md-4'>" + keys[i] + "</div><div class='col-xs-8'> " + d[arr[0]][arr[1]] +
+                    "</div></div>";
+                arr = null;
+            } else {
+                str += "<div class='row'><div class='col-xs-4'>" + keys[i] + "</div><div class='col-xs-8'>" + d[i] + "</div></div>";
+            }
+        }
+        str += '</div><hr style="margin-bottom:0"><p class="text-muted">标记为</p><p style="padding:0 10px;">';
+        str += '<a class="btn btn-xs btn-default" style="background-color:#aaa" onclick="updateStatus(' + row +
+            ',9)">历史导入</a>' +
+            '<a class="btn btn-xs btn-default" onclick="updateStatus(' + row + ',0)">刚申请</a>' +
+            '<a class="btn btn-xs btn-warning" onclick="updateStatus(' + row + ',1)">预分配</a>' +
+            '<a class="btn btn-xs"style="color: #fff;background-color: #e3a0f5;border-color: #d597eb;" onclick="updateStatus(' + row + ',2)">IDC已备等待录资管等待工信部IP备案</a>' +
+            '<a class="btn btn-xs btn-info" onclick="updateStatus(' + row + ',3)">已录资管&工信部已备等待IDC备案</a>' +
+            '<a class="btn btn-xs btn-success" onclick="updateStatus(' + row + ',4)">等待做数据</a>' +
+            '<a class="btn btn-xs btn-default" onclick="updateStatus(' + row + ',5)">完成</a>';
+        str += '</p><p class="h3 bg-info">使用右键菜单发现更多操作</p>';
+        str = str.replace(/null|undefined/g, "");
+        $("detail").html(str);
+        if (dhxWins.isWindow("_input")) {
+            dhxWins.window("_input").attachHTMLString(str);
+            return;
+        }
+        dhxWins.createWindow("_input", 5, 220, 410, 600);
+        var text = d.zxType + "专线 详细信息&nbsp;&nbsp;&nbsp;&nbsp;<a onclick='checkWindows(\"_input\")'>点此关闭</a>";
+        dhxWins.window("_input").setText(text);
+        dhxWins.window("_input").attachHTMLString(str);
+    }
+    /* 获取当前选择列的ids */
+    /* return Array */
+    /* arg=true:  ids (default) */
+    /* arg=false: rowIds */
+    // 多选的行号合并、去重并获取其数据的id数组
+    function getSelectedIds(arg) {
+        if (hot.getSelected() === undefined) {
+            return;
+        }
+        arg = (arg == undefined || arg == true) ? true : false;
+        var hotData = hot.getSourceData(),
+            obj = {},
+            result = [],
+            selectedRange = hot.getSelectedRange();
+        for (var range in selectedRange) { // 每一个selectedRange
+            var from = selectedRange[range].from.row,
+                to = selectedRange[range].to.row;
+            for (var i = Math.min(from, to); i <= Math.max(from, to); i++) { // from.row 与 to.row从大到小
+                if (!obj[i]) { // 去重
+                    obj[i] = 1;
+                    if (arg) {
+                        result.push(hotData[i].id);
+                    } else {
+                        result.push(i);
+                    }
+                }
+            }
+        }
+        result = result.sort(function(a, b) {
+            return a - b;
+        });
+        return result;
+    }
+</script>
+<script id="contextMenu">
+    /* 右键菜单操作 start */
+    /************************/
+    /* 加载数据制作脚本的资源并显示 */
+    function script(scriptObj) {
+        window.postScript = scriptObj;
+        if (scriptObj.code === 0) {
+            dhtmlx.alert(scriptObj.msg);
+            return;
+        }
+        if (typeof(show_bas) == "undefined") {
+            // 加载一次。
+            $.get("../Tool/_script.html", function(data) {
+                $(".content").append(data);
+                showScript(scriptObj);
+            });
+        } else {
+            showScript(scriptObj);
+        }
+        checkWindows("_input");
+    }
+    /* 显示数据制作脚本 用在 script */
+    function showScript(scriptObj) {
+        if (typeof(scriptObj.bas01 != "undefined")) {
+            show_bas("01", scriptObj.bas01);
+        }
+        if (typeof(scriptObj.bas02 != "undefined")) {
+            show_bas("02", scriptObj.bas02);
+        }
+        if (typeof(scriptObj.the93 != "undefined")) {
+            show_9312(scriptObj.the93[0], scriptObj.the93[1]);
+        }
+    }
+    /* 导出到其他系统模板 */
+    function put(key) {
+        var ifUsePHP = $("#usePHP").prop("checked") == true ? 1 : 0;
+        var args = {
+            _method: "PUT",
+            r: key,
+            php: ifUsePHP,
+            id: getSelectedIds().toString()
+        };
+        if (ifUsePHP) {
+            /* 后端php生成excel */
+            var msg = "please-wait,if-goes-wrong,close-this-tab-and-try-agian!";
+            var form = $("<form method='post' action =?" + msg + " name='_export' target='_blank'></form>");
+            for (arg in args) {
+                var input = $("<input type='hidden'>");
+                input.attr({
+                    "name": arg
+                });
+                input.val(args[arg]);
+                form.append(input);
+            }
+            $(document.body).append(form);
+            form.submit();
+            //	在DOM中移除 刚生成的form
+            setTimeout("document.forms._export.parentNode.removeChild(document.forms._export)", 0);
+        } else {
+            /* 前端XLSX生成excel */
+            sessionStorage.setItem("export_key", key);
+            $.post("?f=" + key, args, function(data) {
+                jsGetXLSX(exportExcel, data);
+            });
+
+            function exportExcel(data) {
+                var key = sessionStorage.getItem("export_key");
+                var settings = {
+                    export_zg: {
+                        header: ["描述", "所属地市*", "IP地址*", "使用状态*", "所属上一级子网名*", "业务类型*", "业务小类*", "设备名称", "联系人姓名(客户侧)", "联系电话(客户侧)",
+                            "分配使用时间", "负责人姓名(移动侧)*", "负责人电话(移动侧)*", "备注", "所属单位*", "数据质量责任人*", "单位名称/具体业务信息*", "单位所属分类", "单位性质", "所属省份*",
+                            "单位详细地址", "联系人邮箱(客户侧)", "负责部门(移动侧)*", "负责人邮箱(移动侧)*", "Loopbak地址", "所属区县", "单位行政级别", "单位所属行业分类", "网关物理位置",
+                            "使用方式", "经营许可证编号", "网关IP地址", "政企专线计费代号", "管理状态*", "机房", "接入端口信息"
+                        ],
+                        worksheetIndex: 1,
+                        fileType: "xls",
+                    },
+                    export_jtip: {
+                        header: ["属性中文名称", "网段名称", "单位名称/具体业务信息", "单位所属分类", "经营许可证编号", "单位性质", "所属省份", "所属地市", "所属区县", "单位行政级别",
+                            "单位所属行业分类", "单位详细地址", "联系人姓名(客户侧)", "联系人电话(客户侧)", "联系人邮箱(客户侧)", "网关物理位置", "使用方式", "分配使用时间", "网关IP地址", "业务类型",
+                            "使用状态", "管理状态", "机房", "设备名称", "Loopbak地址", "接入端口信息", "负责部门(移动侧)", "负责人姓名(移动侧)", "负责人电话(移动侧)", "负责人邮箱(移动侧)",
+                            "备注"
+                        ],
+                        worksheetIndex: 1,
+                        fileType: "xlsx",
+                    },
+                    export_gxbip: {
+                        header: ["起始IP地址/IP*（192.168.1.1）", "终止IP地址/掩码*（192.168.1.1）", "单位名称*", "单位所属分类*\r\n（参看选项表）",
+                            " 经营许可证编号 \r\n(单位所属分类为电信业务经营者时必填) ", "单位性质*\r\n（参看选项表）", "单位所在省*\r\n（参看选项表）", "单位所在市*\r\n（参看选项表）",
+                            "单位所在县\r\n（参看选项表）", "单位行政级别\r\n（参看选项表）", " 单位所属行业分类\r\n（参看选项表）", "单位详细地址*", "联系人姓名*", "联系人电话*", " 联系人电子邮箱* ",
+                            "网关物理位置", "使用方式*\r\n（参看选项表） ", " 分配使用时间*\r\n（2011-08-09） ", "网关IP地址"
+                        ],
+                        worksheetIndex: 5,
+                        fileType: "xls",
+                    },
+                };
+                var exportData = convertPHPArrayToJSArray(data.cellValues, settings[key]["header"]);
+                genXLSX(settings[key]["worksheetIndex"], "data", exportData, data.fileName);
+            }
+        }
+        console.log("\t\tput(key):submit:", args);
+        if (key !== 'export_zg') return; // 仅export_zg后执行
+        setTimeout(function(rows) {
+            dhtmlx.confirm({
+                title: "自动修改状态？",
+                text: "是否修改导出项的状态为：<br><br><button class='btn btn-xs btn-success'>等待做数据</button>",
+                callback: function(result) {
+                    if (result) {
+                        updateStatusMulti(rows, 4);
+                    }
+                }
+            });
+        }(getSelectedIds(false)), 0);
+    }
+    /* 批量修改已选条目的状态 */
+    function updateStatusMulti(rows, the_status) {
+        var updates = {};
+        for (var i in rows) {
+            updates[rows[i] + "-" + infoData[rows[i]].id] = {
+                "status": the_status
+            };
+        }
+        postUpdate(updates);
+    }
+    /* 删除条目 */
+    function postDelete() {
+        var ids = getSelectedIds();
+        var ranges = getSelectedIds(false);
+        var cNames = '<p class="text-danger">';
+        for (var i in ranges) {
+            cNames += [infoData[ranges[i]]["cName"], infoData[ranges[i]]["ip"]].join(", ") + "<br>";
+        }
+        cNames += '</p>';
+        dhtmlx.confirm({
+            type: "confirm-warning",
+            title: "确认删除所选范围内的条目？",
+            text: "包含的台账有：<br>" + cNames,
+            width: "600px",
+            ok: "删除",
+            cancel: "点错了",
+            callback: function(result) {
+                if (!result) {
+                    return;
+                } else {
+                    doDelete(ids, ranges);
+                }
+            }
+        });
+
+        function doDelete(ids, ranges) {
+            $.post("", {
+                r: "delete",
+                id: ids
+            }, function(data) {
+                if (data == ids.length) {
+                    // hot 前端组件同步删除,基于数组的index
+                    // 使用splice函数会改变数组本身，批量操作时从后往前执行不会出错。
+                    for (var i = ranges.length - 1; i >= 0; i--) {
+                        infoData.splice(ranges[i], 1);
+                    }
+                    hot.render();
+                } else {
+                    dhtmlx.alert("操作异常，建议刷新页面后重试。");
+                }
+            });
+        }
+    }
+    /* 设置状态显示（背景色）页面滚动同步刷新显示  */
+    function initStatusSync() {
+        if (sessionStorage.getItem("tableStatus") == undefined) {
+            return;
+        }
+        var _statusVal;
+        var dataObj = $("#queryTable table.htCore tbody tr");
+        for (var i in dataObj) {
+            _statusVal = $("#queryTable table.htCore tbody tr:eq(" + i + ") td:last").text();
+            changeStatus(parseInt(i) + 1, _statusVal);
+        }
+    }
+    /* 完整修改 */
+    function fullUpdate() {
+        var id = getSelectedIds()[0];
+        var rowId = getSelectedIds(false)[0];
+        sessionStorage.setItem("selected_id", id);
+        sessionStorage.setItem("selected_rowId", rowId);
+        if (typeof _formAjax != "undefined") {
+            form_init(infoData[rowId]);
+        } else {
+            $.get("../Common/_formStructure.html", function(data1) {
+                $("body").after(data1);
+                $.get("../Common/_formConfig.html", function(data2) {
+                    $("body").append(data2);
+                    window._formAjax = 1;
+                    form_init(infoData[rowId]);
+                });
+            });
+        }
+    }
+    /**
+     * 初始化 修改申请的表单
+     */
+    function form_init(formData) {
+        // var _data = JSON.parse(JSON.stringify(formData));
+        var _data = $.extend(true, {}, formData); // 深拷贝
+        if (!dhxWins.isWindow("_reApply")) {
+            dhxWins.createWindow("_reApply", 145, 20, 850, _htmlHeight - 40);
+        }
+        var textNotes = _htmlWidth < 1000 ? "&nbsp;<code>浏览器窗口太小显示不全,双击此处调整页面布局。</code>" : "";
+        dhxWins.window("_reApply").setText("修改/查看" + textNotes);
+        window.myForm = null;
+        myForm = dhxWins.window("_reApply").attachForm(formStructure);
+        myForm.setItemLabel("basic", myForm.getItemLabel("basic") + " - [单号: " + formData["id"] + " ]");
+        myForm.addItem("ip_bak", ipStructure, 0, 0);
+        myForm.addItem("ip_bak", vlanStructure, 0, 0);
+        myForm.disableItem("vlan");
+        myForm.disableItem("ip");
+        myForm.setReadonly("instanceId", true);
+        myForm.enableLiveValidation(true);
+        initCombo();
+        for (var i in _data["extra"]) {
+            _data[i] = _data["extra"][i];
+        }
+        myForm.extra = _data["extra"];
+        delete _data["extra"];
+        // 加载数据
+        myForm.loadStruct({
+            data: _data
+        });
+        fixExtraFields();
+        myForm.updates = {};
+        sessionStorage.setItem("formDataBackups", myForm.saveBackup());
+        myForm.attachEvent("onChange", onChangeHandler);
+        myForm.attachEvent("onChange", function(name, value, state) {
+            // example: updates={"16-1741":{vlan:"2222",ip:"223.100.108.2"}}
+            var rowId = sessionStorage.getItem("selected_rowId");
+            var id = sessionStorage.getItem("selected_id");
+            var key = rowId + "-" + id;
+            var notExtra = true;
+            myForm.updates[key] = {}; // 初始化记录更新的数组
+            for (var k in infoData[rowId]['extra']) {
+                if (notExtra && name == k) { // 此时修改项为 extra 字段
+                    notExtra = false;
+                    myForm.updates[key]['extra'] = infoData[rowId]['extra'];
+                    myForm.updates[key]['extra'][name] = value;
+                    break;
+                }
+            }
+            if (notExtra) myForm.updates[key][name] = value;
+        });
+        //formStructure = null;
+        window.evId == null || myForm.detachEvent("evId");
+        evId = myForm.attachEvent("onButtonClick", function(id) {
+            if (id == "commit") {
+                if (myForm.validate()) {
+                    var num = removeSpace();
+                    if (num > 0) {
+                        dhtmlx.alert("已自动去除<b class='text-danger'>" + num + "</b>个字段中的空格，请核对后再次提交。<br>下次请注意不要录入空格，谢谢。");
+                        return;
+                    }
+                    // 提交到修改申请操作
+                    postUpdate(myForm.updates);
+                } else {
+                    dhtmlx.alert({
+                        type: "alert-error",
+                        title: "数据验证有误",
+                        text: "请检查填写是否完整或格式类型是否正确。"
+                    });
+                }
+            } else if (id == "cancel") {
+                myForm.restoreBackup(sessionStorage.getItem("formDataBackups"));
+                dhtmlx.message("表单已重置");
+                return;
+            } else if (id) {
+                dhtmlx.alert({
+                    type: "alert-warning",
+                    title: "warning",
+                    text: "按钮事件未定义：" + id
+                });
+            }
+
+        });
+    }
+    /* 标记台账状态 */
+    function changeStatus(row, status) {
+        $(".ht_master tr:eq(" + row + ") > td").css("background-color", backgroundColor[status]);
+    }
+    /* 更新台账状态 */
+    function updateStatus(row, status) {
+        var newData = {};
+        newData[row + "-" + infoData[row].id] = {
+            "status": status
+        };
+        postUpdate(newData);
+        $("._detail_str").css('background-color', backgroundColor[status]);
+    }
+    /* 导出台账 （全量） */
+    function export_all() {
+        jsGetXLSX(wrFiles);
+
+        function wrFiles() {
+            /* original data */
+            var type = {
+                "互联网": "net223",
+                "营业厅": "yyt",
+                "卫生网": "wsw",
+                "平安校园": "safe-campus"
+            };
+            var typename = $("#btn-group button.active").prop("name");
+            var filename = "new-ip-tables-" + type[typename] + "-" + dhx.date2str(new Date(), "%Y-%m-%d") + ".xlsx";
+            $.post("", {
+                _method: "PUT",
+                r: "export",
+                zxType: typename
+            }, function(data) {
+                var exportData = data.data;
+                var colHeader = typeof(data.colHeader) != "undefined" && data.colHeader.split(",");
+                var colName = typeof(data.colName) != "undefined" && data.colName.split(",");
+                data = [];
+                var extra = "";
+                if (colHeader) {
+                    for (var i in exportData) {
+                        data[i] = [];
+                        for (var j in colName) {
+                            if (/extra/.test(colName[j])) {
+                                extra = exportData[i]["extra"];
+                                if (extra != null) data[i].push(extra[colName[j].split(".")[1]]);
+                            } else {
+                                data[i].push(exportData[i][colName[j]]);
+                            }
+                        }
+                    }
+                }
+                data.unshift(colHeader);
+                var ws_name = "data";
+                var wb = XLSX.utils.book_new(),
+                    ws = XLSX.utils.aoa_to_sheet(data);
+                /* add worksheet to workbook */
+                XLSX.utils.book_append_sheet(wb, ws, ws_name);
+                /* write workbook */
+                XLSX.writeFile(wb, filename);
+            });
+        }
+    }
+    /* 获取 XLSX 后继续执行 */
+    function jsGetXLSX(func, arg) {
+        if (typeof(XLSX) == "object") {
+            func(arg);
+            return;
+        }
+        var url = "https://cdn.jsdelivr.net/npm/xlsx@0.13.2/dist/xlsx.full.min.js";
+        if (/10./.test(document.location.host)) {
+            url = "__STATIC__/sheetjs/xlsx.full.min.js";
+        }
+        $.getScript(url, function() {
+            func(arg);
+        });
+    }
+    /************************/
+    /* 右键菜单操作 end */
+    function checkWindows(id) {
+        dhxWins.isWindow(id) && dhxWins.window(id).close();
+    }
+    var backgroundColor = {
+        0: "#fff",
+        1: "#f0ad4e",
+        2: "#e3a0f5",
+        3: "#5bc0de",
+        4: "#5cb85c",
+        5: "#fff",
+        6: "",
+        7: "",
+        8: "",
+        9: "#aaa"
+    };
+</script>
+<script id="genXLSX">
+    /*
+     * 后端返回一维数组： ["B5"] => string(6) "xxx"
+     * 前端转换成二维数组 [1][4] = "xxx"
+     */
+    function getColNumbyColName(name) {
+        var str = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        var col = 0;
+        for (var i = 0; i < name.length; i++) {
+            col += (str.indexOf(name.charAt(name.length - i - 1)) + 1) * Math.pow(26, i);
+        }
+        return col - 1;
+    }
+
+    function convertPHPArrayToJSArray(data, header) {
+        var array = [
+            [],
+            [],
+            [],
+            []
+        ];
+        for (var i in data) {
+            var row = i.replace(/[^0-9]/ig, "") - 1;
+            var col = getColNumbyColName(i.replace(/[^A-Z]+/ig, ""));
+            if (!array[row]) {
+                array[row] = [];
+            }
+            array[row][col] = data[i];
+        }
+        array[0] = header;
+        return array;
+    }
+
+    function convertPHPArrayToJSSheet(data, header) {
+
+    }
+    /* datas 为二维数组 */
+    function genXLSX(worksheetIndex, worksheetNames, datas, filename, bookType) {
+        var ws_name = worksheetNames;
+        var wb = XLSX.utils.book_new();
+        var ws = XLSX.utils.aoa_to_sheet(datas);
+        // 创建空sheet
+        for (var i = 1; i < worksheetIndex; i++) {
+            XLSX.utils.book_append_sheet(wb, [], "Sheet" + i);
+        }
+        XLSX.utils.book_append_sheet(wb, ws, ws_name);
+        if (!wb.Props) wb.Props = {};
+        wb.Props.Title = "Auto Exported files";
+        wb.Props.Author = "X.Da";
+        //var options = {compression: true};
+        if (!wb.Workbook) wb.Workbook = {};
+        if (!wb.Workbook.WBView) wb.Workbook.WBView = [];
+        var xdaOptions = {
+            activeTab: worksheetIndex - 1,
+            firstSheet: 0,
+            minimized: false,
+            showSheetTabs: true,
+            visibility: "visible"
+        };
+        /*var WBViewDef = [
+        	['activeTab',                   0,      "int"],
+        	['autoFilterDateGrouping',      true,  "bool"],
+        	['firstSheet',                  0,      "int"],
+        	['minimized',                   false, "bool"],
+        	['showHorizontalScroll',        true,  "bool"],
+        	['showSheetTabs',               true,  "bool"],
+        	['showVerticalScroll',          true,  "bool"],
+        	['tabRatio',                    600,    "int"],
+        	['visibility',                  'visible']
+        	//window{Height,Width}, {x,y}Window
+        ];*/
+        wb.Workbook.WBView[0] = xdaOptions;
+        XLSX.writeFile(wb, filename);
+    }
+    /*
+    var url = "/2.xlsx";
+    var req = new XMLHttpRequest();
+    req.open("GET", url, true);
+    req.responseType = "arraybuffer";
+
+    req.onload = function(e) {
+      window.data = new Uint8Array(req.response);
+      window.wwb = XLSX.read(data, {type:"array"});
+    }
+    req.send();
+    */
+</script>>
+<script id="showInfoWin">
+    function showInfoWin() {
+        checkWindows("info_win");
+        var info_win = dhxWins.createWindow({
+            id: "info_win",
+            center: true,
+            width: 1000,
+            height: 500,
+            caption: "9312互联端口明细",
+        });
+
+        $.get("_getDevice9312Info.html", function(data) {
+            var deviceInfo = JSON.parse(data);
+            var tbodyHtml = '';
+            tbodyHtml +=
+                "<tr class='success'><td>9313名</td><td>上行口 to_CH</td><td>上行口 to_YZ</td><td>下行口 华为 </td><td>下行口 中兴</td><td>YZME60X 下行口</td><td>CHME60X 下行口</td></tr>";
+            for (var _d in deviceInfo) {
+                tbodyHtml += "<tr><td>" + _d + "</td>";
+                tbodyHtml += "<td>" + deviceInfo[_d]['up_port_ch'] + "</td>";
+                tbodyHtml += "<td>" + deviceInfo[_d]['up_port_yz'] + "</td>";
+                tbodyHtml += "<td>" + deviceInfo[_d]['port_hw'] + "</td>";
+                tbodyHtml += "<td>" + deviceInfo[_d]['port_zte'] + "</td>";
+                tbodyHtml += "<td>" + deviceInfo[_d]['bas02_down_port'] + "</td>";
+                tbodyHtml += "<td>" + deviceInfo[_d]['bas01_down_port'] + "</td>";
+                tbodyHtml += "</tr>";
+            }
+            $("#the93_info tbody").html(tbodyHtml.replace(/undefined/g, " "));
+            info_win.attachObject($("#the93_info").clone()[0]);
+        });
+
+    }
+</script> {/block}

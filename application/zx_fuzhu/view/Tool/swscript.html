@@ -1,0 +1,257 @@
+{extend name="common@Public/base" /} {block name="leftmenu"} {include file="Common/leftmenu_zx_apply_tool" /} {/block}{block
+name="main"}
+<style>
+	#layoutObj {
+		position: absolute;
+		top: 100px;
+		left: 0;
+		bottom: 0;
+		right: 0;
+	}
+
+	pre#resultPre {
+		position: relative;
+		width: 100%;
+		height: 100%;
+		overflow: auto;
+	}
+</style>
+<div class="htmltitle">
+	<h2>数据批量生成</h2>
+</div>
+
+<div>
+	<p>输入相关信息，生成执行脚本</p>
+	<pre style="position: absolute; top: 50px; left: 450px;">本页面在IE9显示完美，FireFox/Chrome不是很友好(pre标签\r\n的问题)</pre>
+</div>
+<div class="layoutObj">
+	<div id="layoutObj"></div>
+</div>
+<pre id="resultPre" spellcheck="false" contenteditable="true" style="display: none;"></pre>
+<script>
+	window.console = window.console || (function () {
+		var c = {};
+		c.log = c.warn = c.debug = c.info = c.error = c.time = c.dir = c.profile = c.clear = c.exception = c.trace = c.assert = function () {
+		};
+		return c;
+	})();
+	var myLayout = new dhtmlXLayoutObject({
+		parent: "layoutObj",
+		pattern: "2U",
+		cells: [
+			{
+				id: "a",
+				text: "基本信息",
+				width: 370,
+			},
+			{
+				id: "b",
+				text: "生成的脚本",
+				height: "*",
+			},
+		]
+	});
+	var formData = [
+		{ type: "settings", labelWidth: 80, inputWidth: 200 },
+		{
+			type: "fieldset", name: "sw", label: "交换机脚本批量生成", inputWidth: "auto", offsetLeft: "10", list: [
+				{
+					type: "block", inputWidth: "auto", blockOffset: "0", list: [
+						{ type: "combo", name: "portName", label: "端口名称", required: true },
+						{ type: "combo", name: "startPort", label: "起始端口", required: true },
+						{ type: "input", name: "stopPort", label: "终止端口", value: 23, required: true },
+						{ type: "input", name: "exceptPort", label: "排除的端口", note: { "text": "用“,”分割" } },
+						{ type: "input", name: "order", label: "执行的命令", value: "", rows: 4, required: true },
+					]
+				},
+				{
+					type: "block", inputWidth: "auto", blockOffset: "0", list: [
+						{
+							type: "block", inputWidth: "auto", blockOffset: "90", list: [
+								{ type: "button", name: "ok_sw", value: "生成" },
+							]
+						}
+					]
+				},
+			]
+		},
+		{
+			type: "fieldset", name: "ips", label: "ip列表生成", inputWidth: "auto", offsetLeft: "10", list: [
+				{
+					type: "block", inputWidth: "auto", blockOffset: "0", list: [
+						{ type: "input", name: "ipStr", label: "ip段", rows: 6 },
+					]
+				},
+				{
+					type: "block", inputWidth: "auto", blockOffset: "0", list: [
+						{
+							type: "block", inputWidth: "auto", blockOffset: "90", list: [
+								{ type: "button", name: "ok_ip", value: "生成" },
+							]
+						}
+					]
+				},
+			]
+		}
+	];
+
+	var myForm = myLayout.cells("a").attachForm(formData);
+	var portNameOptions = ["interface GigabitEthernet", "interface Ethernet"];
+	var startPortOption = ["0/0/0", "0/0/1", "0/1", "0/0"];
+	myForm.getCombo("portName").load(createComboOption(portNameOptions));
+	myForm.getCombo("startPort").load(createComboOption(startPortOption));
+
+	function createComboOption(optionArray) {
+		var str = [];
+		for (var i = 0; i < optionArray.length; i++) {
+			str[i] = { value: optionArray[i], text: optionArray[i] };
+		}
+		str[str.length - 1]['selected'] = true;
+		return { options: str };
+	}
+	myForm.attachEvent("onButtonClick", function (id) {
+		if (id == 'ok_sw') {
+			//myForm.disableItem("ips");
+			if (!myForm.validate()) {
+				dhtmlx.alert({
+					title: "无效请求",
+					ok: "知道了",
+					text: "请将信息填写完整再试",
+				});
+				return false;
+			}
+			var name = $("input[name='portName']").val();
+			var a = $("input[name='startPort']").val();
+			var b = parseInt($("input[name='stopPort']").val());
+			var except = myForm.getItemValue("exceptPort");
+			var orders = myForm.getItemValue("order");
+			$("#resultPre").text(createScript(name, a, b, except, orders));
+			myLayout.cells("b").attachObject("resultPre");
+			//showRes(name, a, b, except, orders);
+			//myForm.enableItem("ips");
+		} else if (id == 'ok_ip') {
+			var value = myForm.getItemValue("ipStr").trim();
+			if (value == "") {
+				dhtmlx.alert({
+					title: "无效请求",
+					ok: "知道了",
+					text: "您没有填任何信息",
+				});
+				return false;
+			}
+			var ipStrArray = value.split("\n");
+			var range;
+			var result = [];
+			for (var i in ipStrArray) {
+				if (ipStrArray[i] == "") {
+					continue;
+				}
+				range = IP.ip_parse(ipStrArray[i]);
+				for (var j = range[2]; j <= range[3]; j++) {
+					if (j % 256 == 0 || j % 256 == 255) {
+						continue;
+					}
+					result.push(IP.long2ip(j));
+				}
+			}
+			$("#resultPre").text(result.join("\n"));
+			myLayout.cells("b").attachObject("resultPre");
+		} else {
+			alert("Button with name " + id + " was clicked");
+		}
+	});
+	function showRes(name, a, b, except, orders) {
+		var str = '<pre id="resultPre">' + createScript(name, a, b, except, orders) + '</pre>';
+		myLayout.cells("b").attachHTMLString(str);
+	}
+	function createScript(name, a, b, except, orders) {
+		// name 形如 “interface Ethernet”
+		// a 形如 “0/0/18”
+		name = name + a.substr(0, a.lastIndexOf("/") + 1);	// name 形如 “interface Ethernet 0/0/”
+		a = parseInt(a.substr(a.lastIndexOf("/") + 1));	// a 形如  (int)18
+		except = except.length == 0 ? [parseInt(b) + 1] : except.split(",");
+		var pointer = 0;	// 数组 except 的指针，手动推动
+		var pre_str = "";
+		var d = "\n";
+		for (var i = a; i <= b; i++) {
+			if (i != except[pointer]) {
+				pre_str += name + i + d
+					+ orders + d;
+			} else if (pointer < except.length) {
+				pointer++;
+			}
+		}
+		pre_str += d;
+		return pre_str;
+	}
+</script>
+<script>
+	var IP = {
+		/* ip字符串10.10.10.10/32转成ip2long形式的数组:ip/mask/ip_start/ip_end */
+		ip_reg: /((25[0-5]|2[0-4]\d|((1\d{2})|([1-9]?\d)))\.){3}(25[0-5]|2[0-4]\d|((1\d{2})|([1-9]?\d)))/,
+		ip_parse: function (ip_str) {
+			ip_str = ip_str.trim();
+			if (ip_str == "") {
+				return [
+					null,
+					null,
+					null,
+					null
+				];
+			}
+			var ip_strArray = ip_str.split("/");
+			var mask_len = 32 | ip_strArray[1];
+			var ip = this.ip2long(ip_strArray[0]);
+			var mask = 0xFFFFFFFF << (32 - mask_len) & 0xFFFFFFFF;
+			var ip_start = ip & mask;
+			ip_start = ip_start < 0 ? Math.pow(2, 32) + ip_start : ip_start;
+			var ip_end = ip | (~mask) & 0xFFFFFFFF;
+			ip_end = ip_end < 0 ? Math.pow(2, 32) + ip_end : ip_end;
+			return Array(
+				ip,
+				mask,
+				ip_start,
+				ip_end
+			);
+		},
+		/* ip_long、掩码转换成ip字符串10.10.10.10/32 */
+		ip_export: function (ip, mask) {
+			if (isNaN(ip) || ip == 0) {
+				return null;
+			}
+			if (mask == - 1 | mask == undefined) {
+				return this.long2ip(ip);
+			} else {
+				var suffix = 32 - Math.log(-~~mask) / Math.log(2);
+				return this.long2ip(ip) + "/" + suffix;
+			}
+		},
+		ip2long: function (ipstr) {
+			var a = ipstr.split("/");
+			var c = a[0].toString().match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+			var b = a.length == 1 ? true : a.length > 2 ? false : parseInt(a[1]) <= 32 && a[1].match(/^\d{0,2}$/);
+			var d = c && !!(c[1] <= 255 && c[2] <= 255 && c[3] <= 255 && c[4] <= 255) && b || false;
+			if (!d) {
+				return null;
+			}
+			var array = ipstr.trim().split(".");
+			var result = 0;
+			for (var i = 0; i < 4; i++) {
+				result += array[i] * Math.pow(256, 3 - i);
+			}
+			return result;
+		},
+		long2ip: function (_long) {
+			if (isNaN(_long) || _long == 0) {
+				return null;
+			}
+			_long = _long < 0 ? Math.pow(2, 32) + _long : _long;
+			var r = [];
+			r[3] = _long % 256;
+			r[2] = parseInt(_long / Math.pow(256, 1) % 256);
+			r[1] = parseInt(_long / Math.pow(256, 2) % 256);
+			r[0] = parseInt(_long / Math.pow(256, 3) % 256);
+			return r.join(".");
+		},
+	};
+</script> {/block}

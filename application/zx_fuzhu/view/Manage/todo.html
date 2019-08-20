@@ -1,0 +1,353 @@
+{extend name="common@Public/base" /} {block name="leftmenu"} {include file="Common/leftmenu_zx_apply_manage" /}
+{/block}
+{block name="head"}
+<style id="thisStyle">
+	#list_container {
+		width: 300px;
+		border-right: 1px solid #666
+	}
+
+	#form_container {
+		position: absolute;
+		top: 10px;
+		left: 310px;
+		width: 850px;
+		height: auto;
+		/*border: 1px solid #f00;*/
+	}
+
+	.dhtmlx_message_area {
+		top: 48px !important;
+		left: 280px !important;
+		width: 970px !important;
+		font-size: 12px;
+		font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
+	}
+
+	.dhtmlx-info {
+		background: transparent;
+		padding: 0 0 10px 0;
+		border: none;
+		box-shadow: none;
+	}
+
+	.dhtmlx-info div {
+		padding: 0;
+	}
+</style>
+{/block} {block name="main"}
+<div class="htmltitle">
+	<span class="h2" style="margin-right: 50px">待办工作</span>
+	<div>
+		<p>点击列表，查看明细，并进行操作。</p>
+	</div>
+</div>
+
+<div id="list_container"></div>
+<div id="form_container">
+	<div id="myForm_tip">
+		<p style="color: blue; padding: 150px 50px;">点击左侧列表查看详细信息</p>
+	</div>
+</div>
+{/block} {block name="script"}
+<script>
+	$(function () {
+		// 宽度小会影响 dhtmlx_message_area 的显示
+		if (_htmlWidth <= 1250) {
+			if (_htmlWidth <= 970) {
+				dhtmlx.alert("你的窗口宽度也太小了吧？<br>" + _htmlWidth);
+			} else {
+				$("#thisStyle").html($("#thisStyle").html().replace("280", _htmlWidth - 970));
+			}
+		}
+	});
+	$("#list_container").css("height", $(".main").height() - $(".htmltitle").height() - 30 - 10 + "px");
+	//h2的margin、底部预留10
+	var myList = new dhtmlXList({
+		container: "list_container",
+		type: {
+			template: "<b style='color:blue;'>#cName#</b><br/>#create_time#&nbsp;&nbsp;#aPerson#<br/><span style='color:#9c49f5'>#instanceId#&nbsp;&nbsp;#zxType#&nbsp;&nbsp;#ifOnu#&nbsp;&nbsp;#aStation#</span>",
+			height: 80
+		},
+		select: true,
+	});
+	// var dataList = {data:{$list}};
+	// 此形式便于 myList.parse()使用
+	var dataList = {$list};
+	for (var i in dataList) {
+		dataList[i]["ifOnu"] = ["PTN", "ONU"][dataList[i]["ifOnu"]]
+	}
+	myList.parse(dataList, "json");
+	//myList.define("select",true);	//单选模式。（multiselect为多选）
+	$("#myForm").html($("#myForm_tip").html());
+	var myForm, evId;
+	// 绑定点击 list Item 事件
+	myList.attachEvent("onAfterSelect", function (id) {
+		showDetail (id);
+	});
+	/**
+	 * 获取并显示细节
+	 */
+	function showDetail (id) {
+		var index = myList.indexById(id);
+		var formData = dataList[index];
+		//form_init(formData);	//初始化
+		$.post("?req=getDetail", {
+			"id": id
+		}, function (data0) {
+			if (data0.url != undefined) {
+				dhtmlx.alert({
+					text: data0.msg,
+					ok: "刷新一下吧",
+					callback: function () {
+						location.href = data0.url;
+					}
+				});
+			}
+			if (typeof _formAjax != "undefined") {
+				form_init(data0);
+			} else {
+				$.get("../Common/_formStructure.html", function (data1) {
+					$("body").after(data1);
+					formStructure[4].list.unshift(buttons);
+					$.get("../Common/_formConfig.html", function (data2) {
+						$("body").append(data2);
+						window._formAjax = 1;
+						form_init(data0);
+					});
+				});
+			}
+		});
+	}
+	/**
+	 * 初始化 表单
+	 */
+	function form_init(formData) {
+		sessionStorage.setItem("formData",JSON.stringify(formData));
+		$("#form_container").html("");
+		myForm = null;
+		myForm = new dhtmlXForm('form_container', formStructure);
+		myForm.setItemLabel("basic", myForm.getItemLabel("basic") + " - [单号: " + formData["detail"]["id"] + " ]");
+		myForm.addItem("ip_bak", ipStructure, 0, 0);
+		myForm.addItem("ip_bak", vlanStructure, 0, 0);
+		myForm.enableLiveValidation(true);
+		initCombo();
+		myForm.attachEvent("onChange", onChangeHandler);
+		myForm.loadStruct({
+			data: formData["detail"]
+		}); //加载数据
+		fixExtraFields();
+		if (formData["detail"]["neFactory"] == "ONU") {
+			var status = formData["detail"]["status"];
+			var statusObj = {
+				color: ["#fff", "#f0ad4e", "#e3a0f5", "#5bc0de", "#0f0"],
+				text: ["刚申请", "预分配", "IDC已备等待录资管等待工信部IP备案", "已录资管&工信部已备等待IDC备案", "等待做数据"]
+			};
+			var htmlStr = " <span style='border-left:solid 50px " +
+				statusObj["color"][status] + "'></span> " + " - [ " + statusObj["text"][status] + " ]";
+			myForm.setItemLabel("ip_bak", myForm.getItemLabel("ip_bak") + htmlStr);
+		}
+		onChangeHandler("neFactory", myForm.getItemValue("neFactory"));
+		//onChangeHandler("ifOnu", myForm.getItemValue("ifOnu"));
+		myForm.setRequired("aStation", false);
+		//sessionStorage.setItem("formDataBackups", myForm.saveBackup());
+		//formStructure = null;
+		evId == null || myForm.detachEvent("evId");
+		evId = myForm.attachEvent("onButtonClick", function (id) {
+			if (id == "auto_pre") {
+				myForm.disableItem("ip");
+				var valid = myForm.validate();
+				myForm.enableItem("ip")
+				if (!valid) {
+					dhtmlx.alert("请检查数据是否有效，然后重试");
+					return;
+				}
+				//var data = {id: myForm.getFormData().id};
+				$.post("?req=auto_pre", myForm.getFormData(), function (d) {
+					myForm.setItemValue("ip", d.genIp);
+					if (d.device) {
+						myForm.setItemValue("vlan", d.preVlan);
+						if (typeof calculateUsedVlans == 'function') {
+							showUsedVlans(d);
+						} else {
+							$.get("../Common/_calculateUsedVlans.html", function (data) {
+								$("body").append(data);
+								showUsedVlans(d);
+							});
+						}
+					}
+				});
+			} else if (id == "commit") {
+				if (myForm.validate()) {
+					// 默认不忽略验证 vlan
+					commitForm(false);
+				} else {
+					dhtmlx.alert({
+						type: "alert-error",
+						title: "数据验证有误",
+						text: "请检查填写是否完整或格式类型是否正确。"
+					});
+				}
+			} else if (id == "cancel") {
+				form_init(JSON.parse(sessionStorage.getItem("formData")));
+				//myForm.restoreBackup(sessionStorage.getItem("formDataBackups"));
+				dhtmlx.message("表单已重置");
+			} else if (id) {
+				dhtmlx.alert({
+					type: "alert-warning",
+					title: "warning",
+					text: "按钮事件未定义：" + id
+				});
+			}
+		});
+		showRelated(formData["string"], formData["related"]);
+	}
+	/* 提交分配的信息 */
+	function commitForm(ignoreCheck) {
+		var myData = myForm.getFormData();
+		var emailData = {
+			id: myData.id,
+			aEmail: myData.aEmail,
+			mEmail: myData.mEmail,
+			zxType: myData.zxType,
+			cName: myData.cName,
+			vlan: myData.vlan,
+			ip: myData.ip,
+			ipB: myData.ipB
+		};
+		sessionStorage.setItem("emailData", JSON.stringify(emailData));
+		var url = (ignoreCheck ? "todo/ignore" : "") + "todo?req=distribution";
+		$.post(url, myData, function (data) {
+			if (data.url) {
+				dhtmlx.alert({
+					text: "登陆超时！",
+					callback: function () {
+						location.href = data.url;
+					}
+				});
+			}
+			// 分配结果：data.code: 0 有重复; 1 成功; 2 其他异常（无变化、aStation不在枚举范围内）
+			// 约定的 return 值：$msg 表示 提示信息（区分是ip问题还是vlan问题），$data 表示具体数据（如重复的客户名） 
+			isIP = /ip/.test(data.msg);
+			data.code == 0 ? dhtmlx.message({
+				type: isIP ? "alert" : "confirm-warning",
+				title: data.msg,
+				text: data.msg + " 已被分配给：<br>" + data.data,
+				callback: function (result) {
+					if(isIP) return;
+					result && commitForm(true);
+				},
+				width: 500,
+			}) : data.code == 1 ? dhtmlx.message({
+				type: "confirm",
+				title: "&nbsp;",
+				text: data.msg,
+				callback: function (result) {
+					result && sendResultEmail();
+					myList.clearAll();
+					data.data && myList.parse(data.data, "json");
+					$("#form_container").html("");
+				},
+				width: 500,
+			}) : data.code == 2 ? dhtmlx.message({
+				type: "alert",
+				title: "&nbsp;",
+				text: data.msg + "<br>" + data.data,
+				callback: function (result) {
+					if (data.code == 0) {
+						result && commitForm(true);
+						return;
+					}
+					if (data.code == 1) {
+						result && sendResultEmail();
+						myList.clearAll();
+						data.data && myList.parse(data.data, "json");
+						$("#form_container").html("");
+					}
+				},
+				width: 500,
+			}) : dhtmlx.message({
+				type: "alert",
+				title: "&nbsp;code=" + data.code,
+				text: "？？？"
+			});
+			setTimeout(function () {
+				if ($(".dhtmlx_popup_button div:last")[0]) {
+					$(".dhtmlx_popup_button div:last")[0].click();
+				}
+			}, 600 * 1000);
+		});
+	}
+	/* 显示台账中同客户名的摘要信息 */
+	function showRelated(string, data) {
+		if (data.length == 0) {
+			dhtmlx.message({
+				id: "_text",
+				text: "不存在同客户名的相关台账信息(参考以预防重复申请)&nbsp;-&nbsp;-&nbsp;-&nbsp;-&nbsp;-&nbsp;<span class='text-primary'>(点击关闭此消息)</span>",
+				expire: 10000
+			});
+			dhtmlx.message.hide("_str");
+			return;
+		}
+		var str = '';
+		for (var i in data) {
+			var delete_time_str = data[i]["delete_time"] == null ? "" : "<span class='bg-primary'>" + dhx.date2str(new Date(data[
+				i]["delete_time"] * 1000), "%Y-%m-%d %H:%i:%s") + "已删</span>";
+			str += [
+				data[i]["id"],
+				data[i]["instanceId"],
+				data[i]["create_time"],
+				data[i]["cName"],
+				data[i]["aStation"],
+				data[i]["neFactory"],
+				data[i]["vlan"],
+				data[i]["ip"],
+				data[i]["aPerson"],
+				data[i]["aEmail"],
+				delete_time_str
+			].join(",") + "<br />";
+		}
+		var text = "客户名包含<code>" + string +
+			"</code>的台账信息:(参考以预防重复申请)&nbsp;-&nbsp;-&nbsp;-&nbsp;-&nbsp;-&nbsp;<span class='text-primary'>(点此关闭此消息)</span>";
+		dhtmlx.message({
+			id: "_text",
+			text: text,
+			expire: -1
+		});
+		dhtmlx.message({
+			id: "_str",
+			text: str,
+			expire: -1
+		});
+	}
+	/* 显示已分配vlan */
+	function showUsedVlans(data) {
+		//dhtmlx.alert({width: "700px", title: d.device+" 已使用vlan(集客部分)", text: data});
+		checkWindows("_vlans");
+		var str = '<p class="text-primary" style="padding:15px;">' + calculateUsedVlans(data.usedVlans) + '</p>';
+		var text = "<code>" + myForm.getItemValue("aStation") + data.device +
+			"</code>已使用vlan(集客部分)&nbsp;&nbsp;&nbsp;&nbsp;<a onclick='checkWindows(\"_vlans\")'>点此关闭</a>";
+		dhxWins.createWindow("_vlans", 5, _htmlHeight - 170, 600, 150);
+		dhxWins.window("_vlans").setText(text);
+		dhxWins.window("_vlans").attachHTMLString(str);
+	}
+	/* 发送 [ip已分配] 邮件 */
+	function sendResultEmail() {
+		var data = JSON.parse(sessionStorage.getItem("emailData"));
+		$.post("sendResultEmail.html", data, function (d) {
+			if (d.code) {
+				dhtmlx.message("邮件发送成功<br>" + JSON.parse(sessionStorage.getItem("emailData")).mEmail + ", " + JSON.parse(
+					sessionStorage.getItem("emailData")).aEmail);
+			} else {
+				dhtmlx.alert({
+					title: "邮件发送失败",
+					text: d.data
+				});
+			}
+		});
+	}
+
+	function checkWindows(id) {
+		dhxWins.isWindow(id) && dhxWins.window(id).close();
+	}
+</script> {/block}

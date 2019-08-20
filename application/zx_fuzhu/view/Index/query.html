@@ -1,0 +1,814 @@
+{extend name="common@Public/base" /} {block name="head"}
+<link rel="STYLESHEET" type="text/css" href="__STATIC__/handsontable-pro/handsontable.full.min.css">
+<script src="__STATIC__/handsontable-pro/handsontable.full.min.js"></script> {/block} {block name="leftmenu"} {include file="Common/leftmenu_zx_apply_index" /} {/block} {block name="main"}
+<div class="htmltitle">
+	<span class="h2" style="margin-right: 50px">信息查询</span>
+	<span>请选择类别：</span>
+	<span id="btn-group" class="btn-group">
+		<button class="btn btn-sm btn-default active" name="互联网">互联网</button>
+		<button class="btn btn-sm btn-default" name="营业厅">营业厅</button>
+		<button class="btn btn-sm btn-default" name="卫生网">卫生网</button>
+		<button class="btn btn-sm btn-default" name="平安校园">平安校园</button>
+	</span>
+</div>
+<div>此处仅可查看自己申请过的专线信息(基于申请人姓名)</div>
+<div style="margin-top: 10px; margin-bottom: 3px;">
+	<form class="form-inline" onsubmit="javascript:return false;">
+		<div class="form-group has-success">
+			<select id="colName" class="form-control">
+				<option value="cName">客户名</option>
+				<option value="instanceId">实例标识</option>
+				<option value="vlan">vlan</option>
+				<option value="status">状态</option>
+			</select>
+			<input type="text" class="form-control" id="searchStr">
+		</div>
+		<button id="btn-search" type="submit" class="btn btn-default" data-toggle="tooltip" data-placement="top" title="当前页搜索不限制列名，可搜索任意字段">当前页搜索</button>
+		<button id="btn-searchAll" class="btn btn-default" data-toggle="tooltip" data-placement="top" title="全局搜索需根据列名搜索">全局搜索</button>
+		<button id="btn-searchBrief" class="btn btn-primary" data-toggle="tooltip" data-placement="top" title="基于列名模糊搜索历史信息">历史信息查询</button>
+		<div id="tips" class="form-group" style="display: none; margin-left: 20px;">
+			<span id="tips-text" class="text-primary"></span>
+			<button id="tips-btn" class="btn btn-xs btn-primary">定位到下一个</button>
+		</div>
+		<div id="tips-msg" class="form-group text-muted" style="margin-left: 20px;"></div>
+	</form>
+</div>
+<div class="fixed-container" style="overflow: hidden; visibility: hidden;">
+	<div id='queryTable'></div>
+</div>
+{/block} {block name="script"}
+<script>
+	$.ajaxSetup({
+		cache: true,
+	});
+	$(function ($) {
+		//$(".wtHolder")[0].style.height="";	//修复wtHolder层（handsontable右键菜单）height过大。
+		$(".fixed-container").css("height", (_htmlHeight - 190) + "px");
+		var tt = Date.now();
+		initHandsontable(infoData);
+		initSearch();
+		sessionStorage.setItem("tableStatus", "yes");
+		initStatusSync();
+		console.info("\t\t渲染用时:", Date.now() - tt, "ms");
+		hot.initTimes = Date.now();
+		$('[data-toggle="tooltip"]').tooltip();
+		$("#btn-group button").on("click", typeSelected);
+	});
+	dhtmlx.message({
+		id: "_msg",
+		text: "loading..."
+	});
+	var _loading = setTimeout(function () {
+		dhtmlx.message.hide("_msg");
+		dhtmlx.message({
+			id: "_msg",
+			text: "数据加载完毕~<hr>数据验证用时:    " + (Date.now() - hot.initTimes) / 1000 + " s"
+		});
+		$(".fixed-container").css("visibility", "");
+		console.info("\t\t数据验证用时:", Date.now() - hot.initTimes, "ms");
+	}, 500);
+	/* 专线类型选择 */
+	function typeSelected() {
+		checkWindows("_input");
+		$("#searchStr").val("");
+		$(this).addClass("active").siblings().removeClass("active");
+		$.post("", {
+			r: "info",
+			zxType: this.name
+		}, function (data) {
+			infoData = adjustInfo(data);
+			hot.updateSettings({
+				data: infoData
+			});
+			hot.validateCells();
+		});
+	}
+</script>
+<script id="renderHandsontable">
+	var colWidthsData = "{$colWidthsData}";
+	var zxTypeData = "互联网,营业厅,平安校园,点对点,卫生网,教育网,IMS,其他";
+	var neFactoryData = "请选择,华为,中兴,ONU";
+	var colHeaderData = "{$colHeaderData}";
+	var container = document.getElementById('queryTable');
+	var infoData, hot, columnsData, contextMenuData;
+	infoData = {$data};
+	columnsData = [{
+		data: 'create_time',
+		type: "date",
+		dateFormat: "YYYY-MM-DD",
+		correctFormat: true,
+		validator: "date",
+		readOnly: true
+	}, {
+		data: 'instanceId',
+		type: 'numeric'
+	}, {
+		data: 'zxType',
+		editor: 'select',
+		selectOptions: zxTypeData.split(","),
+	}, {
+		data: 'bandWidth',
+	}, {
+		data: 'neFactory',
+		editor: 'select',
+		selectOptions: neFactoryData.split(","),
+	}, {
+		data: 'aStation',
+	}, {
+		data: 'cName',
+		allowEmpty: false
+	}, {
+		data: 'cAddress',
+	}, {
+		data: 'cNeeds',
+	}, {
+		data: 'vlan',
+		type: 'numeric',
+		editor: false,
+	}, {
+		data: 'ip',
+		readOnly: true
+		/*}, {
+			data : 'ipB',
+			readOnly: true*/
+	}, {
+		data: 'cPerson',
+	}, {
+		data: 'cPhone',
+	}, {
+		data: 'cEmail',
+	}, {
+		data: 'mPerson',
+	}, {
+		data: 'mPhone',
+	}, {
+		data: 'mEmail',
+	}, {
+		data: 'marks',
+	}, {
+		data: 'ifOnu',
+		editor: 'select',
+		selectOptions: [0, 1],
+	}, {
+		data: 'oltName',
+	}, {
+		data: 'extra.unitProperty',
+		type: 'numeric',
+	}, {
+		data: 'extra.unitCategory',
+		type: 'numeric',
+	}, {
+		data: 'extra.industryCategory',
+		type: 'numeric',
+	}, {
+		data: 'extra.credential',
+		type: 'numeric',
+	}, {
+		data: 'extra.credentialnum',
+	}, {
+		data: 'extra.province',
+		type: 'numeric',
+	}, {
+		data: 'extra.city',
+		type: 'numeric',
+	}, {
+		data: 'extra.county',
+		type: 'numeric',
+	}, {
+		data: 'extra.appServType',
+		type: 'numeric',
+	}, {
+		data: 'extra.unitAttribute',
+	}, {
+		data: 'extra.securityPerson',
+	}, {
+		data: 'extra.securityPersonID',
+	}, {
+		data: 'extra.securityPhone',
+	}, {
+		data: 'extra.securityEmail',
+	}, {
+		data: 'aPerson',
+		readOnly: true
+	}, {
+		data: 'aEmail',
+		readOnly: true
+	}, {
+		data: 'status',
+		type: 'numeric',
+		readOnly: true
+	}];
+	/* 初始化台账显示 */
+	function initHandsontable(infoData) {
+		if (typeof (hot) != "undefined")
+			hot = null;
+		container.innerHTML = null;
+		infoData = adjustInfo(infoData);
+		hot = new Handsontable(container, {
+			data: infoData,
+			rowHeaders: true,
+			colWidths: colWidthsData.split(","),
+			//autoColumnSize : true,
+			//filters : true,
+			search: true,
+			//minSpareRows : 1,
+			manualColumnResize: true,
+			colHeaders: colHeaderData.split(","),
+			columns: columnsData,
+		});
+		hot.validateCells();
+		hot.updateSettings({
+			contextMenu: {
+				callback: function (key, options) {
+					hot.disableShowDetail = true;
+					if (hot.getSelectedRange() === undefined) {
+						dhtmlx.alert("空白处右键操作是无效的~");
+					} else if (key === 'about') {
+						setTimeout(function () {
+							// timeout is used to make sure the menu collapsed before alert is shown
+							parent.dhtmlx.alert({
+								title: "特别鸣谢",
+								text: "本菜单由 X.Da 自定义。感谢 <a href='https://github.com/thianda' target='_blank'>X.Da</a>"
+							});
+						}, 100);
+					} else if (key === 'copyOneMore') {
+						copyOneMore();
+					} else if (key === 'reApply') {
+						reApply();
+					} else if (key === 'show_status') {
+						if (sessionStorage.getItem("tableStatus") == undefined) {
+							sessionStorage.setItem("tableStatus", "yes");
+							initStatusSync();
+						} else {
+							sessionStorage.removeItem("tableStatus");
+							hot.render();
+						}
+					} else if (key === 'export_all') {
+						export_all();
+					}
+				},
+				items: {
+					"about": {
+						name: "<b>**Power by Xianda</b>"
+					},
+					"hsep1": "---------",
+					"copyOneMore": {
+						name: "额外再申请1个IP"
+					},
+					"reApply": {
+						name: "<b>修改申请</b>",
+						disabled: function () {
+							var s = hot.getSelectedRange();
+							var a = s && s.length > 1; // 多选时禁用
+							var b = s && s[0].from.row != s[0].to.row; // 多选时禁用
+							return a || b;
+						}
+					},
+					"show_status": {
+						name: function () {
+							var name;
+							if (sessionStorage.getItem("tableStatus") == "yes") {
+								name = "隐藏台账状态";
+							} else {
+								name = "显示台账状态";
+							}
+							return name;
+						}
+					},
+					"export_all": {
+						name: "导出台账（全量）"
+					},
+				},
+			}
+		});
+		hot.updateSettings({
+			afterOnCellMouseOver: function (event, coords, td) {
+				//console.log(event,coords,td);
+				hot.validateRows([coords.row], function (valid) {
+					hot.currentRowValid = {
+						row: coords.row,
+						valid: valid
+					}; // 触发设置当前行的验证结果
+				});
+			},
+			afterChange: function (changes, source) { // 修改后自动同步到数据库
+				var updates = {},
+					_id = [],
+					rows = [],
+					hotData = hot.getSourceData();
+				for (var i in changes) { // 记录变化到 updates
+					var _change = changes[i];
+					if (_change[2] == _change[3]) {
+						break;
+					}
+					console.log("really_change[" + i + "]", _change);
+					_id.push(hotData[_change[0]].id);
+					rows.push(_change[0]);
+					var key = _change[1],
+						value = _change[3],
+						_update_key = _change[0] + "-" + _id[i];
+					updates[_update_key] = {};
+					updates[_update_key][_change[1]] = _change[3]; // example: updates={"16-17":{vlan:"2222",ip:"223.100.108.2"}}
+				}
+				if ($.isEmptyObject(updates)) { // 无变化，函数返回
+					return;
+				}
+				console.log("afterChangeEnv:", changes, source);
+				if (source == "edit") {
+					dhtmlx.confirm({
+						title: "您刚进行了修改操作",
+						text: "请微信群联系管理员修改，在此修改不会同步到服务器。",
+						ok: "我自己改着玩的",
+						cancel: "撤销修改",
+						callback: function (result) {
+							if (result) {
+								dhtmlx.message("改着玩儿不会影响到服务器保存的信息");
+							} else {
+								hot.undo();
+							}
+						}
+					});
+				}
+			},
+			afterRender: function () {
+				initStatusSync();
+			}
+		});
+	}
+	/* 调整填充数据中不存在的字段 */
+	function adjustInfo(infoData) {
+		var extra = "unitProperty,unitCategory,industryCategory,credential,credentialnum,province,city,county,appServType".split(
+			",");
+		for (var i in infoData) {
+			if (infoData[i]["extra"] == undefined) {
+				infoData[i]["extra"] = [];
+			}
+			for (var j in extra) {
+				if (infoData[i]["extra"][extra[j]] == undefined) {
+					infoData[i]["extra"][extra[j]] = "";
+				}
+			}
+		}
+		return infoData;
+	}
+
+	function initSearch() {
+		$("#searchStr").on("focus", function () {
+			checkWindows("_input");
+		});
+		hot.search = hot.getPlugin('search');
+		/* 当前页搜索按钮 */
+		Handsontable.dom.addEvent(document.getElementById("searchStr"), "keyup", function () {
+			if (this.value == "") {
+				showTips("");
+			} else {
+				var result = hot.search.query(this.value);
+				if (result.length > 0) {
+					if (result.length == 1) {
+						//sessionStorage.removeItem("searchResult");
+						showTips("1个结果。");
+					} else {
+						showTips("输入框按回车可定位到第一个。", result.length);
+					}
+				} else {
+					showTips("未找到");
+				}
+				sessionStorage.setItem("searchResult", JSON.stringify(result));
+				sessionStorage.setItem("searchResultSelectedIndex", 0);
+				checkWindows("_input");
+			}
+		});
+		$("#btn-search").on("click", function () {
+			var str = $("#searchStr").val();
+			if (str == "") {
+				showTips("");
+			} else {
+				var result = hot.search.query(str);
+				result.length == 0 && showTips("未找到");
+				result.length > 0 && selectCell(result);
+				sessionStorage.setItem("searchResult", JSON.stringify(result));
+				sessionStorage.setItem("searchResultSelectedIndex", 0);
+				checkWindows("_input");
+			}
+		});
+		/* 数据库搜索按钮 */
+		$("#btn-searchAll").on("click", function () {
+			var str = $("#searchStr").val();
+			var zxType = $(".htmltitle button.active").prop("name");
+			if (str == "") {
+				showTips("");
+				$.post("", {
+					r: "info",
+					zxType: zxType
+				}, function (data) {
+					infoData = adjustInfo(data);
+					hot.updateSettings({
+						data: infoData
+					});
+					hot.validateCells();
+				});
+			} else {
+				showTips("");
+				var _where = [];
+				_where[0] = $("#colName").val();
+				_where[2] = str;
+				$.post("", {
+					r: "search",
+					where: _where,
+					zxType: zxType
+				}, function (data) {
+					infoData = adjustInfo(data);
+					hot.updateSettings({
+						data: infoData
+					});
+					hot.validateCells();
+				});
+			}
+		});
+		/* 历史基本信息搜索按钮 */
+		$("#btn-searchBrief").on("click", function () {
+			var str = $("#searchStr").val();
+			var zxType = $(".htmltitle button.active").prop("name");
+			if (str == "") {
+				showTips("");
+			} else {
+				showTips("");
+				var _where = [];
+				_where[0] = $("#colName").val();
+				_where[2] = str;
+				$.post("", {
+					r: "brief",
+					where: _where,
+					zxType: zxType
+				}, function (data) {
+					showBrief(data);
+				});
+			}
+		});
+		/* 定位下一个按钮 */
+		$("#tips-btn").on("click", function () {
+			var result = JSON.parse(sessionStorage.getItem("searchResult"));
+			var index = parseInt(sessionStorage.getItem("searchResultSelectedIndex"));
+			if (++index == result.length) {
+				index = 0;
+				dhtmlx.alert("返回到第一个搜索结果");
+			}
+			sessionStorage.setItem("searchResultSelectedIndex", index);
+			hot.selectCell(result[index].row, result[index].col);
+			hot.scrollViewportTo(result[index].row);
+			//!!index && $(".wtHolder")[0].scrollBy(0,50);
+			showTips("当前定位到第" + (index + 1) + "个结果。", result.length);
+			checkWindows("_input");
+		});
+	}
+	/* 定位数据 */
+	function selectCell(result) {
+		hot.selectCell(result[0].row, result[0].col);
+		hot.scrollViewportTo(result[0].row);
+	}
+	/* 按钮后面的提示信息 */
+	function showTips(msg, muti) {
+		if (typeof (muti) != "undefined") {
+			$("#tips-msg").html(msg);
+			$("#tips").fadeIn(500);
+			$("#tips-text").html("找到 " + muti + " 个结果。");
+		} else {
+			$("#tips-msg").html(msg);
+			$("#tips").fadeOut(500);
+		}
+	}
+	/* 获取当前选择列的ids */
+	/* return Array */
+	/* arg=true:  ids (default) */
+	/* arg=false: rowIds */
+	// 多选的行号合并、去重并获取其数据的id数组
+	function getSelectedIds(arg) {
+		if (hot.getSelected() === undefined) {
+			return;
+		}
+		arg = (arg == undefined || arg == true) ? true : false;
+		var hotData = hot.getSourceData(),
+			obj = {},
+			result = [],
+			selectedRange = hot.getSelectedRange();
+		for (var range in selectedRange) { // 每一个selectedRange
+			var from = selectedRange[range].from.row,
+				to = selectedRange[range].to.row;
+			for (var i = Math.min(from, to); i <= Math.max(from, to); i++) { // from.row 与 to.row从大到小
+				if (!obj[i]) { // 去重
+					obj[i] = 1;
+					if (arg) {
+						result.push(hotData[i].id);
+					} else {
+						result.push(i);
+					}
+				}
+			}
+		}
+		result = result.sort(function (a, b) {
+			return a - b;
+		});
+		return result;
+	}
+	/* 显示查询的基本信息 */
+	function showBrief(data) {
+		if (data.url) {
+			dhtmlx.alert({
+				text: data.msg,
+				callback: function () {
+					localStorage.removeItem("phpweb_user");
+					location.href = data.url;
+				}
+			});
+			return;
+		}
+		if (!$.isArray(data)) {
+			dhtmlx.alert({
+				type: "alert-error", 
+				text: "查询过于频繁，请 10 分种后再试！<br>（当前查询累计 " +  data + " 次）"
+			});
+			return;
+		}
+		var str =
+			'<div style="font-size:12px;overflow:auto;width:986px;height:100%"><table class="table table-hover table-condensed"><tbody>';
+		str +=
+			'<tr><th>申请时间</th><th>实例标识</th><th>客户名</th><th>客户地址</th><th>vlan</th><th>ip</th><th>申请人</th><th>申请人邮箱</th></tr>';
+		for (var i in data) {
+			str += '<tr><td style="width:9%">' + data[i]['create_time'] + '</td>';
+			str += '<td style="width:10%">' + data[i]['instanceId'] + '</td>';
+			str += '<td style="width:20%">' + data[i]['cName'] + '</td>';
+			str += '<td style="width:30%">' + data[i]['cAddress'] + '</td>';
+			str += '<td style="width:6%">' + data[i]['vlan'] + '</td>';
+			str += '<td style="width:12%">' + data[i]['ip'] + '</td>';
+			str += '<td style="width:6%">' + data[i]['aPerson'] + '</td>';
+			str += '<td style="width:13%">' + data[i]['aEmail'] + '</td></tr>';
+		}
+		str += '</tbody></table></div>';
+		str = str.replace(/null/g, "-");
+		if (dhxWins.isWindow("_brief")) {
+			dhxWins.window("_brief").attachHTMLString(str);
+			return;
+		}
+		dhxWins.createWindow("_brief", 40, 55, 1000, 600);
+		var text =
+			"基本信息查询结果&nbsp;&nbsp;&nbsp;&nbsp;<span style='color:blue'>按 Ctrl + F 定位搜索</span>&nbsp;&nbsp;&nbsp;&nbsp;<a onclick='checkWindows(\"_brief\")'>点此关闭</a>";
+		dhxWins.window("_brief").setText(text);
+		dhxWins.window("_brief").attachHTMLString(str);
+	}
+</script>
+<script id="contextMenu">
+	/* 右键菜单操作 start */
+	/************************/
+	/* 设置状态显示（背景色）页面滚动同步刷新显示  */
+	function initStatusSync() {
+		if (sessionStorage.getItem("tableStatus") == undefined) {
+			return;
+		}
+		var _statusVal;
+		var dataLen = $("#queryTable table.htCore tbody tr").length;
+		for (var i = 0; i < dataLen; i++) {
+			// 每一行的th记录的是行号（起始是1）
+			var _text = infoData[$("#queryTable table.htCore tbody tr:eq(" + i + ") th").text() - 1];
+			var _statusVal = _text.status;
+			changeStatus(parseInt(i) + 1, _statusVal);
+		}
+	}
+	/* 申请多个ip */
+	function copyOneMore() {
+		var id = getSelectedIds()[0];
+		dhtmlx.confirm({
+			title: "确认您的操作",
+			text: "目前系统设定为一条申请分配一个ip。<br>如果客户需要多个ip，可以使用本操作再创建一条相同的申请信息。",
+			ok: "确认继续",
+			cancel: "取消",
+			callback: function (result) {
+				if (result) {
+					doCopyOneMore(id);
+				}
+			}
+		});
+
+		function doCopyOneMore(id) {
+			$.post("", {
+				_method: "PUT",
+				r: "copy_one_more",
+				copyOne: id,
+			}, function (data) {
+				handleAjaxResponce(data);
+			});
+		}
+	}
+	/* 重新申请 */
+	function reApply() {
+		var rowId = getSelectedIds(false)[0];
+		//var formData = infoData[id];
+		dhtmlx.confirm({
+			title: "确认修改已提交的信息",
+			text: "即将修改已提交的信息，这将导致需要重新分配ip/vlan。<br>别担心，此操作会自动通知管理员进行处理。",
+			ok: "确认继续",
+			cancel: "我在想想",
+			callback: function (result) {
+				if (result) {
+					doReApply(rowId);
+				}
+			}
+		});
+
+		function doReApply(rowId) {
+			if (typeof _formAjax != "undefined") {
+				form_init(infoData[rowId]);
+			} else {
+				$.get("../Common/_formStructure.html", function (data1) {
+					$("body").after(data1);
+					$.get("../Common/_formConfig.html", function (data2) {
+						$("body").append(data2);
+						window._formAjax = 1;
+						form_init(infoData[rowId]);
+					});
+				});
+			}
+		}
+	}
+	/**
+	 * 初始化 修改申请的表单
+	 */
+	function form_init(formData) {
+		var _data = formData;
+		if (!dhxWins.isWindow("_reApply")) {
+			dhxWins.createWindow("_reApply", 145, 20, 850, _htmlHeight - 40);
+		}
+		var textNotes = _htmlWidth < 1000 ? "&nbsp;<code>浏览器窗口太小显示不全,双击此处调整页面布局。</code>" : "";
+		dhxWins.window("_reApply").setText("修改申请重新提交" + textNotes);
+		window.myForm = null;
+		myForm = dhxWins.window("_reApply").attachForm(formStructure);
+		myForm.setItemLabel("basic", myForm.getItemLabel("basic") + " - [原单号: " + formData["id"] + " ]");
+		myForm.addItem("ip_bak", ipStructure, 0, 0);
+		myForm.addItem("ip_bak", vlanStructure, 0, 0);
+		myForm.disableItem("vlan");
+		myForm.disableItem("ip");
+		myForm.setReadonly("instanceId", true);
+		myForm.enableLiveValidation(true);
+		initCombo();
+		for (var i in _data["extra"]) {
+			_data[i] = _data["extra"][i];
+		}
+		delete _data["extra"];
+		// 加载数据
+		myForm.loadStruct({
+			data: _data
+		});
+		fixExtraFields();
+		myForm.oldId = _data["id"];
+		sessionStorage.setItem("formDataBackups", myForm.saveBackup());
+		myForm.attachEvent("onChange", onChangeHandler);
+		//formStructure = null;
+		window.evId == null || myForm.detachEvent("evId");
+		evId = myForm.attachEvent("onButtonClick", function (id) {
+			if (id == "commit") {
+				if (myForm.validate()) {
+					var num = removeSpace();
+					if (num > 0) {
+						dhtmlx.alert("已自动去除<b class='text-danger'>" + num + "</b>个字段中的空格，请核对后再次提交。<br>下次请注意不要录入空格，谢谢。");
+						return;
+					}
+					var myData = {};
+					// 重写表单提交功能
+					myForm.forEachItem(function (name) {
+						if ($.inArray(myForm.getItemType(name), ["input", "combo", "select", "checkbox"]) >= 0 && myForm.isItemEnabled(name)) {
+							myData[name] = myForm.getItemValue(name);
+							if (typeof myData[name] === "string") {
+								myData[name] = myData[name].replace(/ /g, "");
+							}
+						}
+					});
+					// 提交到修改申请操作
+					$.post("re_apply.html?old=" + myForm.oldId, myData, function (data) {
+						handleAjaxResponce(data);
+					});
+				} else {
+					dhtmlx.alert({
+						type: "alert-error",
+						title: "数据验证有误",
+						text: "请检查填写是否完整或格式类型是否正确。"
+					});
+				}
+			} else if (id == "cancel") {
+				myForm.restoreBackup(sessionStorage.getItem("formDataBackups"));
+				dhtmlx.message("表单已重置");
+			} else if (id) {
+				dhtmlx.alert({
+					type: "alert-warning",
+					title: "warning",
+					text: "按钮事件未定义：" + id
+				});
+			}
+		});
+	}
+	/* 处理 ajax 响应 */
+	function handleAjaxResponce(data) {
+		if (data.url) {
+			dhtmlx.alert({
+				text: "登陆超时！",
+				callback: function () {
+					location.href = data.url;
+				}
+			});
+		}
+		data.code == 1 && dhtmlx.alert({
+			title: "&nbsp;",
+			text: "提交成功。",
+			callback: function () {
+				location.href = data.msg;
+			},
+		});
+		data.code == 0 && dhtmlx.alert({
+			type: "alert-error",
+			title: data.msg,
+			text: data.data
+		});
+	}
+	/* 标记台账状态 */
+	function changeStatus(row, status) {
+		$(".ht_master tr:eq(" + row + ") > td").css("background-color", backgroundColor[status]);
+	}
+
+	/* 导出台账 （全量） */
+	function export_all() {
+		jsGetXLSX(wrFiles);
+
+		function wrFiles() {
+			/* original data */
+			var type = {
+				"互联网": "net223",
+				"营业厅": "yyt",
+				"卫生网": "wsw",
+				"平安校园": "safe-campus"
+			};
+			var typename = $("#btn-group button.active").prop("name");
+			var filename = "new-ip-tables-" + type[typename] + "-" + dhx.date2str(new Date(), "%Y-%m-%d") + ".xlsx";
+			$.post("", {
+				_method: "PUT",
+				r: "export",
+				zxType: typename
+			}, function (data) {
+				var exportData = data.data;
+				var colHeader = typeof (data.colHeader) != "undefined" && data.colHeader.split(",");
+				var colName = typeof (data.colName) != "undefined" && data.colName.split(",");
+				data = [];
+				var extra = "";
+				if (colHeader) {
+					for (var i in exportData) {
+						data[i] = [];
+						for (var j in colName) {
+							if (/extra/.test(colName[j])) {
+								extra = exportData[i]["extra"];
+								if (extra != null) data[i].push(extra[colName[j].split(".")[1]]);
+							} else {
+								data[i].push(exportData[i][colName[j]]);
+							}
+						}
+					}
+				}
+				data.unshift(colHeader);
+				var ws_name = "data";
+				var wb = XLSX.utils.book_new(),
+					ws = XLSX.utils.aoa_to_sheet(data);
+				/* add worksheet to workbook */
+				XLSX.utils.book_append_sheet(wb, ws, ws_name);
+				/* write workbook */
+				XLSX.writeFile(wb, filename);
+			});
+		}
+	}
+	/* 获取 XLSX 后继续执行 */
+	function jsGetXLSX(func, arg) {
+		if (typeof (XLSX) == "object") {
+			func(arg);
+			return;
+		}
+		var url = "https://cdn.jsdelivr.net/npm/xlsx@0.13.2/dist/xlsx.full.min.js";
+		if (/10./.test(document.location.host)) {
+			url = "__STATIC__/sheetjs/xlsx.full.min.js";
+		}
+		$.getScript(url, function () {
+			func(arg);
+		});
+	}
+	/************************/
+	/* 右键菜单操作 end */
+	function checkWindows(id) {
+		dhxWins.isWindow(id) && dhxWins.window(id).close();
+	}
+	var backgroundColor = {
+		0: "#fff",
+		1: "#f0ad4e",
+		2: "#e3a0f5",
+        3: "#5bc0de",
+        4: "#5cb85c",
+        5: "#fff",
+		6: "",
+		7: "",
+		8: "",
+		9: "#aaa"
+	};
+</script> {/block}

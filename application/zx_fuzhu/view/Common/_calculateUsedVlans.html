@@ -1,0 +1,32 @@
+<script>
+/**
+ * 将数组格式的已使用vlan变成 vlan batch格式
+ */
+function calculateUsedVlans(usedVlans){
+	usedVlans = usedVlans.sort();
+	var array = [];
+	array.push(usedVlans[0]);
+	var v_1,v0;
+	for(var i=1;i<usedVlans.length;i++){
+		v_1 = usedVlans[i-1];
+		v0 = usedVlans[i];
+		if(v0 == v_1+1){
+			if(array[array.length-1] != "to"){
+				array.push("to");
+			}
+		}else {
+			if(array[array.length-1] == "to"){
+				array.push(v_1);
+				array.push(v0);
+			}else{
+				array.push(v0);
+			}
+		}
+	}
+	if(array[array.length-1] == "to"){
+		array.push(usedVlans[usedVlans.length-1]);
+	}
+	var str = array.join(" ");
+	return str;
+}
+</script>

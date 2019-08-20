@@ -1,0 +1,153 @@
+{extend name="common@Public/base" /} {block name="leftmenu"}
+<ul id="leftMenu" class="nav nav-stacked nav-pills">
+	<li>
+		<a href="{$Think.session.settings_back_url}">
+			<span class="glyphicon glyphicon-chevron-left"></span>返回</a>
+	</li>
+	<li>
+		<a href="settings.html">更多操作</a>
+	</li>
+	<li>
+		<a href="#lastIp">最后一次分配的ip</a>
+	</li>
+	<li>
+		<a href="#vlan">已使用vlan</a>
+	</li>
+</ul>
+{/block}{block name="main"}
+<div class="htmltitle">
+	<span class="h2" style="margin-right:50px">更多操作</span>
+</div>
+<div>
+	<div id="updateLastIP"></div>
+</div>
+<div>
+	<div id="updateUsedVlans"></div>
+</div>
+<div>
+	<div id="otherSetting"></div>
+</div>
+{/block} {block name="script"}
+<script>
+	var updateLastIP_formStructure = [
+		{ type: "settings", labelWidth: 100, inputWidth: 200 },
+		{
+			type: "fieldset", name: "updateLastIP", label: "1.更新最后一次分配的IP", width: 950, offsetLeft: 15, list: [
+				{ type: "select", name: "zxType", label: "专线类别", required: true },
+				{ type: "input", name: "lastIpStr", label: "IP", validate: "ValidIPv4", required: true },
+				{
+					type: "block", inputWidth: "auto", offsetLeft: 30, list: [
+						{ type: "button", name: "ok_ip", value: "确定" },
+						{ type: "newcolumn" },
+						{ type: "button", name: "cancel", value: "重置", offsetLeft: 30 }
+					]
+				},
+				{ type: "newcolumn" },
+				{
+					type: "block", inputWidth: "auto", offsetLeft: 30, list: [
+						{ type: "button", name: "cal_ip", value: "统计未分配ip", offsetLeft: 30 },
+						{ type: "input", name: "unusedIps", label: "统计结果", inputWidth: 300, rows: 6 },
+					]
+				},
+			]
+		},
+		{
+			type: "fieldset", name: "updateUsedVlans", label: "2.更新已分配vlan记录", width: 950, offsetLeft: 15, list: [
+				{ type: "combo", name: "device", label: "设备名", required: true, note: { text: "只能新增已使用的vlan，不支持删除" } },
+				{ type: "input", name: "vlanImport", label: "全局配置", inputWidth: 800, validate: "", rows: 6, required: true, note: { text: "将9312的全局配置粘贴过来，或只粘贴 vlan batch 部分即可。" } },
+				{
+					type: "block", inputWidth: "auto", offsetLeft: 300, list: [
+						{ type: "button", name: "ok_vlan", value: "确定" },
+						{ type: "newcolumn" },
+						{ type: "button", name: "cancel", value: "重置", offsetLeft: 30 }
+					]
+				},
+			]
+		},
+		{
+			type: "fieldset", label: "其他设置", width: 950, offsetLeft: 15, list: [
+				{ type: "label", label: "暂无" },
+			]
+		},
+
+	];
+	var myForm = new dhtmlXForm("updateLastIP", updateLastIP_formStructure);
+	myForm.enableLiveValidation(true);
+</script> {include file="Common/_formConfig" /}
+<script>
+	myForm.reloadOptions("zxType", config["default"]["zxType"]);
+	myForm.setItemValue("lastIpStr", "{$lastIp|default=''}");
+	combo = myForm.getCombo("device");
+	combo.clearAll();
+	combo.setTemplate({
+		input: "#SW#--#position#",
+		//header:false,//if you want to hide header
+		columns: [
+			{ header: "设备名", width: 60, option: "#SW#" },
+			{ header: "位置", width: 90, option: "#position#" }
+		]
+	});
+	combo.addOption(config["muticolumn"]["device"]);
+	combo.enableFilteringMode("between");
+	combo.attachEvent("onChange", function (value, text) {
+		var aStation = text.split("--")[1];
+		$.get("generateVlan.html?d=" + aStation, function (data) {
+			if (!data) {
+				myForm.setItemValue("vlanImport", '');
+				return;
+			}
+			if (typeof calculateUsedVlans == 'function') {
+				showVlanBatch(data.usedVlans);
+			} else {
+				$.get("../Common/_calculateUsedVlans.html", function (data2) {
+					$("body").append(data2);
+					showVlanBatch(data.usedVlans);
+				});
+			}
+		});
+	});
+	function showVlanBatch(data) {
+		var str = calculateUsedVlans(data);
+		myForm.setItemValue("vlanImport", "vlan batch " + str);
+	}
+	myForm.attachEvent("onButtonClick", function (id) {
+		if (id == "ok_ip") {
+			myForm.disableItem("updateUsedVlans");
+			if (myForm.validate()) {
+				var data = myForm.getFormData();
+				data["exec"] = id;
+				$.post("", data, function (d) {
+					if (d) {
+						dhtmlx.alert({ title: "ok", text: "更新最后分配的IP成功" });
+					} else {
+						dhtmlx.alert({ type: "alert-warning", title: "?_?", text: "更新值与记录一致或更新失败。无更新。" });
+					}
+				});
+			} else {
+				dhtmlx.alert({ type: "alert-error", title: "数据验证有误", text: "请检查填写是否完整或格式类型是否正确。" });
+			}
+			myForm.enableItem("updateUsedVlans");
+		}
+		if (id == "cal_ip") {
+			var data = { exec: id };
+			$.post("", data, function (d) {
+				myForm.setItemValue("unusedIps", d.data.split("\n"));
+			});
+		}
+		if (id == "ok_vlan") {
+			myForm.disableItem("updateLastIP");
+			if (myForm.validate()) {
+				var data = myForm.getFormData();
+				data["exec"] = id;
+				$.post("", data, function (d) {
+					var text = "成功识别有效 vlan：" + d.total + "<br>属于专线业务：" + d.count + "<br>成功导入：" + d.validation + "，已存在：" + (d.count - d.validation);
+					dhtmlx.alert({ title: "操作成功", text: text });
+				});
+			} else {
+				dhtmlx.alert({ type: "alert-error", title: "数据验证有误", text: "请检查填写是否完整或格式类型是否正确。" });
+			}
+			myForm.enableItem("updateLastIP");
+		}
+
+	});
+</script> {/block}

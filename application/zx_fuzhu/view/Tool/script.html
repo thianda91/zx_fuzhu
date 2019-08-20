@@ -1,0 +1,558 @@
+{extend name="common@Public/base" /} {block name="leftmenu"} {include file="Common/leftmenu_zx_apply_tool" /} {/block}{block
+name="main"}
+<style>
+	#layoutObj {
+		position: absolute;
+		top: 100px;
+		left: 0;
+		bottom: 0;
+		right: 0;
+	}
+
+	div#the93_info {
+		position: relative;
+		width: 100%;
+		min-width: 740px;
+		height: 100%;
+		overflow: auto;
+	}
+</style>
+<div class="htmltitle">
+	<h2>专线制作数据合成</h2>
+</div>
+
+<div>
+	<p>输入相关信息，生成制作脚本，目前支持互联网专线和卫生网数据生成。
+		<a href='script-v2.html'>V2版</a>
+		</a>
+	</p>
+	<pre style="position: absolute; top: 50px; left: 500px;">本页面在IE9显示完美，FireFox/Chrome不是很友好(pre标签\r\n的问题)</pre>
+</div>
+<div id="layoutObj"></div>
+<div id="others" style="display: none;">
+	<a class="btn btn-link" onclick='showInfoWin()'>9312互联端口明细查看</a>
+</div>
+<pre id="bas_pre" contenteditable="true" style="display: none; height:100%;"></pre>
+<pre id="the93_pre" contenteditable="true" style="display: none; height:100%;"></pre>
+<div id="the93_info" style="display: none; color: blue;">
+	<table class="table table-striped table-condensed">
+		<tbody>
+		</tbody>
+	</table>
+</div>
+<script>
+	window.console = window.console
+		|| (function () {
+			var c = {};
+			c.log = c.warn = c.debug = c.info = c.error = c.time = c.dir = c.profile = c.clear = c.exception = c.trace = c.assert = function () {
+			};
+			return c;
+		})();
+	function run_sample_net() {
+		myForm_net.setItemValue("a_sta", "CHJ-22");
+		myForm_net.setItemValue("ne_factory", "port_zte");
+		myForm_net.setItemValue("vlan", "1234");
+		myForm_net.setItemValue("ip", "223.100.108.251");
+		myForm_net.setItemValue("desc", "TL_YuXianDaCeShi_TestNET");
+		var a = $("input[name='a_sta']").val();
+		var b = $("select[name='ne_factory']").val();
+		var the_up_yz = ne_factory[a]['up_port_yz'];
+		var the_up_ch = ne_factory[a]['up_port_ch'];
+		var the_down = ne_factory[a][b];
+		var bas01_down_port = ne_factory[a]['bas01_down_port'].replace("Eth-Trunk", "");
+		var bas02_down_port = ne_factory[a]['bas02_down_port'].replace("Eth-Trunk", "");
+		var domain = myForm_net.getItemValue("domain");
+		var vlan = myForm_net.getItemValue("vlan");
+		var rbp = ne_factory[a]['rbp_name'];
+		var ip = myForm_net.getItemValue("ip");
+		var desc = myForm_net.getItemValue("desc");
+		show_bas_net("01", bas01_down_port, domain, vlan, rbp, ip, desc);
+		show_bas_net("02", bas02_down_port, domain, vlan, rbp, ip, desc);
+		show_the93_net(vlan, desc, the_up_yz, the_up_ch, the_down, domain);
+	}
+	function run_sample_wsw() {
+		myForm_wsw.setItemValue("a_sta", "CHJ-22");
+		myForm_wsw.setItemValue("ne_factory", "port_zte");
+		myForm_wsw.setItemValue("vlan", "4321");
+		myForm_wsw.setItemValue("ip_h", "10.61.215.1");
+		myForm_wsw.setItemValue("ip_y", "172.168.35.176");
+		myForm_wsw.setItemValue("desc", "TL_YuXianDaCeShi_TestWSW");
+		var a = $("input[name='a_sta']")[1].value;
+		var b = $("select[name='ne_factory']")[1].value;
+		var the_up_yz = ne_factory[a]['up_port_yz'];
+		var the_down = ne_factory[a][b];
+		var bas02_down_port = ne_factory[a]['bas02_down_port'].replace("Eth-Trunk", "");
+		var vpn = myForm_wsw.getItemValue("vpn");
+		var vlan = myForm_wsw.getItemValue("vlan");
+		var ip_h = myForm_wsw.getItemValue("ip_h");
+		var ip_y = myForm_wsw.getItemValue("ip_y");
+		var desc = myForm_wsw.getItemValue("desc");
+		show_bas_wsw(bas02_down_port, vpn, vlan, ip_h, ip_y, desc);
+		show_the93_wsw(vlan, desc, the_up_yz, the_down);
+	}
+	var myLayout = new dhtmlXLayoutObject({
+		parent: "layoutObj",
+		pattern: "3W",
+		cells: [
+			{
+				id: "a",
+				text: "互联网数据生成<a class=\"btn btn-sm btn-link\" onclick=\"run_sample_net()\">查看示例</a>",
+				width: 300,
+			},
+			{
+				id: "b",
+				text: "卫生网数据生成<a class=\"btn btn-sm btn-link\" onclick=\"run_sample_wsw()\">查看示例</a>",
+				width: 300,
+			},
+			{
+				id: "c",
+				text: "其他查询",
+				width: "*",
+			},
+		]
+	});
+	var formDate_net = [
+		{ type: "settings", labelWidth: 80, inputWidth: 170 },
+		{
+			type: "block", inputWidth: "auto", blockOffset: "0", list: [
+				{
+					type: "block", inputWidth: "auto", blockOffset: "15", list: [
+						{ type: "combo", name: "a_sta", label: "A端网元", required: true },
+						{
+							type: "select", name: "ne_factory", label: "网元厂家", options: [
+								{ text: "中兴", value: "port_zte" },
+								{ text: "华为", value: "port_hw", selected: true }
+							], required: true
+						},
+						{
+							type: "select", name: "domain", label: "domain", options: [
+								{ text: "tlyd", value: "tlyd" },
+								{ text: "tlyd-rb", value: "tlyd-rb", selected: true }
+							], required: true
+						},
+						{ type: "input", name: "vlan", label: "vlan", required: true },
+						{ type: "input", name: "ip", label: "ip", value: "223.100.109.", required: true },
+						{ type: "input", name: "desc", label: "描述", rows: 3, required: true },
+					]
+				},
+				{
+					type: "block", inputWidth: "auto", blockOffset: "0", list: [
+						{
+							type: "label", labelWidth: 100, list: [
+								{
+									type: "block", inputWidth: "auto", blockOffset: "75", list: [
+										{ type: "button", name: "net", value: "生成脚本" },
+
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					type: "block", inputWidth: "auto", blockOffset: "0", list: [
+						{
+							type: "label", label: "根据bas02的Trunk口反查9312名", labelWidth: 200, list: [
+								{
+									type: "block", inputWidth: "auto", blockOffset: "0", list: [
+										{ type: "input", name: "_trunk", label: "Trunk口", validate: "ValidInteger" },
+										{ type: "button", name: "trunkTo9312", value: "查看9213名", offsetLeft: 60 },
+										{ type: "input", name: "_9312name", label: "9312名" },
+									]
+								}
+							]
+						}
+					]
+				},
+			]
+		}
+	];
+	var formDate_wsw = [
+		{ type: "settings", labelWidth: 80, inputWidth: 170 },
+		{
+			type: "block", inputWidth: "auto", blockOffset: "0", list: [
+				{
+					type: "block", inputWidth: "auto", blockOffset: "15", list: [
+						{ type: "combo", name: "a_sta", label: "A端网元", required: true },
+						{
+							type: "select", name: "ne_factory", label: "网元厂家", options: [
+								{ text: "中兴", value: "port_zte" },
+								{ text: "华为", value: "port_hw", selected: true }
+							], required: true
+						},
+						{
+							type: "select", name: "vpn", label: "vpn", options: [
+								{ text: "tlwsw1", value: "tlwsw1" },
+								{ text: "tlwsw", value: "tlwsw", selected: true }
+							], required: true
+						},
+						{ type: "input", name: "vlan", label: "vlan", required: true },
+						{ type: "input", name: "ip_h", label: "互联ip", value: "10.61.215.1", required: true },
+						{ type: "input", name: "ip_y", label: "业务ip", value: "172.168.37.0", required: true },
+						{ type: "input", name: "desc", label: "描述", rows: 3, required: true },
+					]
+				},
+				{
+					type: "block", inputWidth: "auto", blockOffset: "0", list: [
+						{
+							type: "label", labelWidth: 100, list: [
+								{
+									type: "block", inputWidth: "auto", blockOffset: "75", list: [
+										{ type: "button", name: "wsw", value: "生成脚本" },
+
+									]
+								}
+							]
+						}
+					]
+				},
+			]
+		}
+	];
+	var myForm_net = myLayout.cells("a").attachForm(formDate_net);
+	var myForm_wsw = myLayout.cells("b").attachForm(formDate_wsw);
+	var a_sta, ne_factory;
+	a_sta = {
+		options: [
+			{ "value": "CHJ-21", "text": "柴河-华为 CHJ-21" },
+			{ "value": "CHJ-22", "text": "柴河-中兴 CHJ-22" },
+			{ "value": "XF-10", "text": "西丰_新 XF-10" },
+			{ "value": "CT-11", "text": "昌图_新 CT-11" },
+			{ "value": "CT-12", "text": "昌图_老 CT-12" },
+			{ "value": "XF-13", "text": "西丰_老 XF-13" },
+			{ "value": "KY-14", "text": "开原_老(解放路) KY-14" },
+			{ "value": "TLX-15", "text": "铁岭县 TLX-15" },
+			{ "value": "QH-16", "text": "清河 QH-16" },
+			{ "value": "DBS-18", "text": "调兵山_新 DBS-18" },
+			{ "value": "DBS-19", "text": "调兵山_老 DBS-19" },
+			{ "value": "KY-20", "text": "开原新 KY-20" },
+			{ "value": "YZL-23", "text": "银州区 YZL-23" },
+			{ "value": "XTZ-17", "text": "新台子 XTZ-17" },
+			{ "value": "CHJ-09", "text": "柴河 CHJ-09" }
+		]
+	};
+	ne_factory = {
+		"CHJ-09": { "up_port_yz": "Eth-Trunk12", "up_port_ch": "Eth-Trunk9", "port_hw": "Eth-Trunk36", "port_zte": "Eth-Trunk26", "bas02_down_port": "Eth-Trunk9", "bas01_down_port": "Eth-Trunk9", "rbp_name": "ch-yz-sw09-chj9312-jk" },
+		"XF-10": { "up_port_yz": "Eth-Trunk114", "up_port_ch": "Eth-Trunk14", "port_hw": "Eth-Trunk2", "port_zte": "Eth-Trunk5", "bas02_down_port": "Eth-Trunk51", "bas01_down_port": "Eth-Trunk3", "rbp_name": "ch-yz-sw10-xf9312-pppoe" },
+		"CT-11": { "up_port_yz": "Eth-Trunk112", "up_port_ch": "Eth-Trunk12", "port_hw": "Eth-Trunk6", "port_zte": "Eth-Trunk5", "bas02_down_port": "Eth-Trunk41", "bas01_down_port": "Eth-Trunk41", "rbp_name": "ch-yz-sw11-ct9312-pppoe" },
+		"CT-12": { "up_port_yz": "Eth-Trunk113", "up_port_ch": "Eth-Trunk13", "port_hw": "Eth-Trunk42", "port_zte": "Eth-Trunk43", "bas02_down_port": "Eth-Trunk42", "bas01_down_port": "Eth-Trunk42", "rbp_name": "ch-yz-sw12-ct9312" },
+		"XF-13": { "up_port_yz": "Eth-Trunk113", "up_port_ch": "Eth-Trunk13", "port_zte": "Eth-Trunk18", "bas02_down_port": "Eth-Trunk46", "bas01_down_port": "Eth-Trunk46", "rbp_name": "ch-yz-sw13-xf9312" },
+		"KY-14": { "up_port_yz": "Eth-Trunk2", "up_port_ch": "Eth-Trunk1", "port_hw": "Eth-Trunk23", "port_zte": "Eth-Trunk24", "bas02_down_port": "Eth-Trunk43", "bas01_down_port": "Eth-Trunk43", "rbp_name": "ch-yz-sw14-ky9312-pppoe" },
+		"TLX-15": { "up_port_yz": "Eth-Trunk114", "up_port_ch": "Eth-Trunk14", "port_hw": "Eth-Trunk2", "bas02_down_port": "Eth-Trunk45", "bas01_down_port": "Eth-Trunk45", "rbp_name": "ch-yz-sw15-tlx9312-jk" },
+		"QH-16": { "up_port_yz": "Eth-Trunk2", "up_port_ch": "Eth-Trunk1", "port_hw": "Eth-Trunk13", "port_zte": "Eth-Trunk7", "bas02_down_port": "Eth-Trunk6", "bas01_down_port": "Eth-Trunk6", "rbp_name": "ch-yz-sw16-qh9312-jk" },
+		"XTZ-17": { "up_port_yz": "Eth-Trunk112", "up_port_ch": "Eth-Trunk12", "bas02_down_port": "Eth-Trunk47", "bas01_down_port": "Eth-Trunk47", "rbp_name": "ch-yz-sw17-xtz9312-jk" },
+		"DBS-18": { "up_port_yz": "Eth-Trunk113", "up_port_ch": "Eth-Trunk13", "port_hw": "Eth-Trunk3", "port_zte": "Eth-Trunk5", "bas02_down_port": "Eth-Trunk53", "bas01_down_port": "Eth-Trunk54", "rbp_name": "ch-yz-sw18-dbs9312" },
+		"DBS-19": { "up_port_yz": "Eth-Trunk112", "up_port_ch": "Eth-Trunk12", "bas02_down_port": "Eth-Trunk49", "bas01_down_port": "Eth-Trunk49", "rbp_name": "ch-yz-sw19-dbs9312" },
+		"KY-20": { "up_port_yz": "Eth-Trunk112", "up_port_ch": "Eth-Trunk12", "port_hw": "Eth-Trunk27", "port_zte": "Eth-Trunk26", "bas02_down_port": "Eth-Trunk50", "bas01_down_port": "Eth-Trunk50", "rbp_name": "ch-yz-sw20-ky9312-pppoe" },
+		"CHJ-21": { "up_port_yz": "Eth-Trunk113", "up_port_ch": "Eth-Trunk13", "port_hw": "Eth-Trunk41", "port_zte": "Eth-Trunk5", "bas02_down_port": "Eth-Trunk39", "bas01_down_port": "Eth-Trunk39", "rbp_name": "ch-yz-sw21-chj9312-pppoe" },
+		"CHJ-22": { "up_port_yz": "Eth-Trunk1", "up_port_ch": "Eth-Trunk0", "port_zte": "Eth-Trunk17", "bas02_down_port": "Eth-Trunk59", "bas01_down_port": "Eth-Trunk59", "rbp_name": "ch-yz-sw22-chj9312-pppoe" },
+		"YZL-23": { "up_port_yz": "Eth-Trunk2", "up_port_ch": "Eth-Trunk1", "bas02_down_port": "Eth-Trunk19", "bas01_down_port": "Eth-Trunk19", "rbp_name": "ch-yz-sw23-yzl9312-pppoe" }
+	};
+	// net 配置
+	var dhxCombo_a_net = myForm_net.getCombo("a_sta");
+	dhxCombo_a_net.load(a_sta);
+	dhxCombo_a_net.enableFilteringMode("between");
+	// wsw 配置
+	var dhxCombo_a_wsw = myForm_wsw.getCombo("a_sta");
+	dhxCombo_a_wsw.load(a_sta);
+	dhxCombo_a_wsw.enableFilteringMode("between");
+
+	myForm_net.attachEvent("onButtonClick", function (id) {
+		if (id == 'trunkTo9312') {
+			var _trunk = myForm_net.getItemValue("_trunk");
+			var res = 0;
+			for (v in ne_factory) {
+				if (ne_factory[v]['bas02_down_port'].substring(9) == _trunk) {
+					myForm_net.setItemValue("_9312name", v);
+					dhtmlx.message({ text: v + "-9312上联端口：<br>" + ne_factory[v]["up_port_yz"] });
+					dhtmlx.message({ text: v + "-9312下联中兴端口：<br>" + ne_factory[v]["port_zte"] });
+					dhtmlx.message({ text: v + "-9312下联华为端口：<br>" + ne_factory[v]["port_hw"] });
+					res++;
+				}
+			}
+			if (res == 0) {
+				myForm_net.setItemValue("_9312name", "");
+				dhtmlx.alert({
+					title: "未找到对应的9312",
+					ok: "知道了",
+					text: "无法根据您输入的Trunk口判断对应的9312名。请重试！",
+					callback: function () {
+						$("input[name='_trunk']").select();
+					},
+				});
+			}
+
+		}
+		else {
+			if (!myForm_net.validate()) {
+				dhtmlx.alert({
+					title: "无效请求",
+					ok: "知道了",
+					text: "请将信息填写完整再试",
+				});
+			}
+			var a = $("input[name='a_sta']").val();
+			var b = $("select[name='ne_factory']").val();
+			var the_up_yz = ne_factory[a]['up_port_yz'];
+			var the_up_ch = ne_factory[a]['up_port_ch'];
+			var the_down = ne_factory[a][b];
+			var bas01_down_port = ne_factory[a]['bas01_down_port'].replace("Eth-Trunk", "");
+			var bas02_down_port = ne_factory[a]['bas02_down_port'].replace("Eth-Trunk", "");
+			var domain = myForm_net.getItemValue("domain");
+			var vlan = myForm_net.getItemValue("vlan");
+			var rbp = ne_factory[a]['rbp_name'];
+			var ip = myForm_net.getItemValue("ip");
+			var desc = myForm_net.getItemValue("desc");
+			if (id == 'net') {
+				checkWindows("aaa");
+				if (domain.length > 4) {
+					show_bas_net("01", bas01_down_port, domain, vlan, rbp, ip, desc);
+				}
+				show_bas_net("02", bas02_down_port, domain, vlan, rbp, ip, desc);
+				show_the93_net(vlan, desc, the_up_yz, the_up_ch, the_down, domain);
+			} else {
+				alert("Button with name " + id + " was clicked");
+			}
+		}
+	});
+	myForm_wsw.attachEvent("onButtonClick", function (id) {
+		var a = $("input[name='a_sta']")[1].value;
+		var b = $("select[name='ne_factory']")[1].value;
+		var the_up_yz = ne_factory[a]['up_port_yz'];
+		var the_up_ch = ne_factory[a]['up_port_ch'];
+		var the_down = ne_factory[a][b];
+		var bas01_down_port = ne_factory[a]['bas01_down_port'].replace("Eth-Trunk", "");
+		var bas02_down_port = ne_factory[a]['bas02_down_port'].replace("Eth-Trunk", "");
+		var vpn = myForm_wsw.getItemValue("vpn");
+		var vlan = myForm_wsw.getItemValue("vlan");
+		var ip_h = myForm_wsw.getItemValue("ip_h");
+		var ip_y = myForm_wsw.getItemValue("ip_y");
+		var desc = myForm_wsw.getItemValue("desc");
+		if (id == "wsw") {
+			show_bas_wsw(bas02_down_port, vpn, vlan, ip_h, ip_y, desc);
+			show_the93_wsw(vlan, desc, the_up_yz, the_down);
+		} else {
+			alert("Button named " + id + " was clicked");
+		}
+	});
+
+	function win_park(bas) {
+		var cell = dhxWins.findByText("01")[0];
+		if (cell) {
+			var f = cell['cell'].isParked();
+			cell['cell'].park(!f);
+		}
+		var cell2 = dhxWins.findByText("02")[0];
+		if (cell2) {
+			var f2 = cell2['cell'].isParked();
+			cell2['cell'].park(!f2);
+		}
+		return;
+		var cell = dhxWins.findByText(bas)[0]['cell'];
+		var f = cell.isParked();
+		//var t = cell.getText().replace(/>(.*)</,">"+(f ? "最小化" : "还原")+"<");
+		//cell.setText(t);
+		cell.park(!f);
+
+	}
+	function show_bas_net(bas, bas_down_port, domain, vlan, rbp, ip, desc) {
+		var bas_str = create_bas_net_script(bas, bas_down_port, domain, vlan, rbp, ip, desc);
+		$("#bas_pre").text(bas_str);
+		var title = "bas " + bas + " 制作脚本-互联网&nbsp;&nbsp;&nbsp;&nbsp;<a href='javascript:void(0)' onclick='win_park(\"" + bas + "\")' >最小化</a>";
+		//myLayout.cells("b").setText(title);
+		//myLayout.cells("b").attachObject("bas_pre");
+		var _bas_conf = {};
+		_bas_conf["01"] = {
+			id: "aaa",
+			left: 120,
+			top: 30,
+			width: 1000,
+			height: 275,
+			caption: title,
+		};
+		_bas_conf["02"] = {
+			id: "bbb",
+			left: 170,
+			top: 120,
+			width: 1000,
+			height: 275,
+			caption: title,
+		};
+		checkWindows(_bas_conf[bas]["id"]);
+		var bas_win = dhxWins.createWindow(_bas_conf[bas]);
+		bas_win.attachEvent("onParkDown", function (win) {
+			var t = win.getText().replace("还原窗口", "最小化");
+			win.setText(t);
+		});
+		bas_win.attachEvent("onParkUp", function (win) {
+			var t = win.getText().replace("最小化", "还原窗口");
+			win.setText(t);
+		});
+		bas_win.attachObject($($("#bas_pre").clone()[0]).prop("id", 'bas' + bas)[0]);
+	}
+	function show_the93_net(vlan, desc, the_up_yz, the_up_ch, the_down, domain) {
+		var the93_str = create_the93_net_script(vlan, desc, the_up_yz, the_up_ch, the_down, domain);
+		$("#the93_pre").text(the93_str);
+		var title = "9312-" + myForm_net.getItemValue("a_sta") + " 制作脚本-互联网&nbsp;&nbsp;&nbsp;&nbsp;<a class='btn btn-xs btn-default' href='script.html'>重置</a>";
+		//myLayout.cells("c").setText(title);
+		//myLayout.cells("c").attachObject("the93_pre");
+		checkWindows("ccc");
+		var the93_win = dhxWins.createWindow({
+			id: "ccc",
+			left: 480,
+			top: 300,
+			width: 400,
+			height: 295,
+			caption: title,
+		});
+		the93_win.attachObject($("#the93_pre").clone()[0]);
+	}
+
+	function show_bas_wsw(bas_down_port, vpn, vlan, ip_h, ip_y, desc) {
+		var bas_str = create_bas_wsw_script(bas_down_port, vpn, vlan, ip_h, ip_y, desc);
+		$("#bas_pre").text(bas_str);
+		var title = "bas02 制作脚本-卫生网&nbsp;&nbsp;&nbsp;&nbsp;<a href='javascript:void(0)' onclick='win_park(\"bas02\")' >最小化</a>";
+		checkWindows("bbb");
+		var bas_win = dhxWins.createWindow({
+			id: "bbb",
+			left: 120,
+			top: 30,
+			width: 1000,
+			height: 260,
+			caption: title,
+		});
+		bas_win.attachEvent("onParkDown", function (win) {
+			var t = win.getText().replace("还原窗口", "最小化");
+			win.setText(t);
+		});
+		bas_win.attachEvent("onParkUp", function (win) {
+			var t = win.getText().replace("最小化", "还原窗口");
+			win.setText(t);
+		});
+		bas_win.attachObject($("#bas_pre").clone()[0]);
+	}
+	function show_the93_wsw(vlan, desc, the_up_yz, the_down) {
+		var the93_str = create_the93_wsw_script(vlan, desc, the_up_yz, the_down);
+		$("#the93_pre").text(the93_str);
+		var title = "9312-" + myForm_wsw.getItemValue("a_sta") + " 制作脚本-卫生网&nbsp;&nbsp;&nbsp;&nbsp;<a class='btn btn-xs btn-default' href='script.html'>重置</a>";
+		checkWindows("ccc");
+		var the93_win = dhxWins.createWindow({
+			id: "ccc",
+			left: 50,
+			top: 300,
+			width: 400,
+			height: 260,
+			caption: title,
+		});
+		the93_win.attachObject($("#the93_pre").clone()[0]);
+	}
+
+	function create_bas_net_script(bas, trunk0, domain0, vlan0, rbp0, ip0, desc) {
+		var _int = "interface Eth-Trunk";
+		var _bas_name = { "01": "01-CHJ", "02": "02-YZL" };
+		var rbp = '';
+		if (domain0.length > 4) {
+			rbp = "\n remote-backup-profile " + rbp0;
+		}
+		var pre_str = _int + trunk0 + "." + vlan0
+			+ "\ndis th\n "
+			+ "\n description [LNTIL-MA-CMNET-BAS" + _bas_name[bas] + "ME60X]Eth-Trunk" + trunk0 + "." + vlan0 + "-[" + desc + "]"
+			+ "\n user-vlan " + vlan0
+			+ rbp
+			+ "\n bas\n #\n access-type layer2-subscriber default-domain authentication " + domain0
+			+ "\n authentication-method bind\n"
+			+ "static-user " + ip0 + " " + ip0 + " gateway " + ip0.substr(0, ip0.lastIndexOf(".") + 1) + "1 "
+			+ _int + trunk0 + "." + vlan0 + " vlan " + vlan0
+			+ " domain-name " + domain0 + " detect\r\n";
+		return pre_str;
+	}
+	function create_the93_net_script(vlan, desc, the_up_yz, the_up_ch, the_down, domain) {
+		var ch_str = '';
+		if (domain.length > 4) {
+			ch_str = "\ninterface "
+				+ the_up_ch
+				+ "\nport trunk allow-pass vlan "
+				+ vlan;
+		}
+		var pre_str = "vlan "
+			+ vlan
+			+ "\ndis th\n \n"
+			+ "description to-["
+			+ desc
+			+ "]\nq\n"
+			+ "interface "
+			+ the_up_yz
+			+ "\nport trunk allow-pass vlan "
+			+ vlan
+			+ ch_str
+			+ "\ninterface "
+			+ the_down
+			+ "\nport trunk allow-pass vlan "
+			+ vlan
+			+ "\nq\r\n";
+		return pre_str;
+	}
+	function create_bas_wsw_script(trunk, vpn, vlan, ip_h, ip_y, desc) {
+		var _int = "interface Eth-Trunk";
+		var pre_str = _int + trunk + "." + vlan
+			+ "\ndis th\n"
+			+ "\n vlan-type dot1q " + vlan
+			+ "\n description [LNTIL-MA-CMNET-BAS02-YZLME60X]Eth-Trunk" + trunk + "." + vlan + "-[" + desc + "]"
+			+ "\n ip binding vpn-instance " + vpn
+			+ "\n ip address " + ip_h + " 255.255.255.252"
+			+ "\n traffic-policy remarkdscp inbound"
+			+ "\n statistic enable"
+			+ "\nip route-static vpn-instance " + vpn + " " + ip_y + " 255.255.255.248 " + ip_h.substr(0, ip_h.lastIndexOf(".") + 1)
+			+ (parseInt(ip_h.substr(ip_h.lastIndexOf(".") + 1)) + 1) + "\r\n";
+		return pre_str;
+	}
+	function create_the93_wsw_script(vlan, desc, the_up_yz, the_down) {
+		var pre_str = "vlan "
+			+ vlan
+			+ "\ndis th\n\n"
+			+ "description to-["
+			+ desc
+			+ "]\nq\n"
+			+ "interface "
+			+ the_up_yz
+			+ "\nport trunk allow-pass vlan "
+			+ vlan
+			+ "\ninterface "
+			+ the_down
+			+ "\nport trunk allow-pass vlan "
+			+ vlan
+			+ "\nq\r\n";
+		return pre_str;
+	}
+</script>
+<script>
+	var a_sta_arry = a_sta.options;
+	var tbodyHtml = '';
+	tbodyHtml += "<tr class='success'><td>9313名</td><td>上行口 to_CH</td><td>上行口 to_YZ</td><td>下行口 华为 </td><td>下行口 中兴</td><td>YZME60X 下行口</td><td>CHME60X 下行口</td></tr>";
+	for (var i = 0; i < a_sta_arry.length; i++) {
+		tbodyHtml += "<tr><td>" + a_sta_arry[i].text + "</td>";
+		tbodyHtml += "<td>" + ne_factory[a_sta_arry[i].value]['up_port_ch'] + "</td>";
+		tbodyHtml += "<td>" + ne_factory[a_sta_arry[i].value]['up_port_yz'] + "</td>";
+		tbodyHtml += "<td>" + ne_factory[a_sta_arry[i].value]['port_hw'] + "</td>";
+		tbodyHtml += "<td>" + ne_factory[a_sta_arry[i].value]['port_zte'] + "</td>";
+		tbodyHtml += "<td>" + ne_factory[a_sta_arry[i].value]['bas02_down_port'] + "</td>";
+		tbodyHtml += "<td>" + ne_factory[a_sta_arry[i].value]['bas01_down_port'] + "</td>";
+		tbodyHtml += "</tr>";
+	}
+	$("#the93_info tbody").html(tbodyHtml.replace(/undefined/g, " "));
+	myLayout.cells("c").attachObject("others");
+	function checkWindows(id) {
+		dhxWins.isWindow(id) && dhxWins.window(id).close();
+	}
+	function showInfoWin() {
+		checkWindows("info_win");
+		var info_win = dhxWins.createWindow({
+			id: "info_win",
+			center: true,
+			width: 1000,
+			height: 500,
+			caption: "9312互联端口明细",
+		});
+		info_win.attachObject($("#the93_info").clone()[0]);
+	}
+</script> {/block}

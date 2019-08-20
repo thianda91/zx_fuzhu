@@ -1,0 +1,254 @@
+{extend name="common@Public/base" /}{block name="leftmenu"} {include file="Common/leftmenu_zx_apply_index" /} {/block} {block
+name="head"}
+<style>
+	.dhtmlx_message_area {
+		right: auto !important;
+		left: 300px;
+		top: 110px !important;
+	}
+
+	#form_container {
+		margin: 20px 100px;
+		padding: 20px;
+		/*border: 1px solid red;*/
+	}
+
+	.tips p {
+		padding: 15px;
+	}
+</style>
+{/block} {block name="main"}
+<div class="htmltitle">
+	<span class="h2" style="margin-right:50px">数据专线开通辅助平台-登陆</span>
+</div>
+<div id="form_container"></div>
+<div class="clearfix"></div>
+<div class="tips">
+	<p class="bg-info">请使用自己的邮箱获取验证码，基于Email方便查找已申请的数据。</p>
+</div>
+{/block} {block name="script"}
+<!-- 
+steps:
+0	若注销后访问，则删除LocalStorage里的code
+1	检测LocalStorage是否保存登陆信息
+2	若name、email、vcode
+3	与服务器数据库校验一致，且在15天之内
+4	直接登录。
+5	否则
+	输入名称、email申请
+	检测email合法
+	检查120分钟内发送数小于12
+	检查距离上次申请验证码小于$ttl分钟（default=120）
+	生成非重复的验证码
+	发送邮件，发送成功则存入数据库
+-->
+<script>
+	$(function () {
+		var phpweb_user = JSON.parse(localStorage.getItem("phpweb_user"));
+		if (phpweb_user) {
+			if (location.hash == "#logout") {
+				delete phpweb_user.code;
+				localStorage.setItem("phpweb_user", JSON.stringify(phpweb_user));
+			}
+			if (phpweb_user["code"]) {
+				login(phpweb_user);
+			}
+			loadFromLocal(phpweb_user);
+		}
+	});
+	function loadFromLocal(phpweb_user) {
+		myForm.setItemValue("name", phpweb_user["name"]);
+		var e = phpweb_user["email"];
+		var str = e.split("@")[0];
+		combo.setComboText(e);
+		generateCombo(combo, str);
+
+	}
+	var formStructure = [
+		{ type: "settings", labelWidth: 80, inputWidth: 250 },
+		{
+			type: "block", inputWidth: "auto", blockOffset: "0", list: [
+				{
+					type: "label", label: "使用前请先登记身份", labelWidth: 200, list: [
+						{
+							type: "block", inputWidth: "auto", blockOffset: "0", list: [
+								{ type: "input", name: "name", label: "申请人姓名", required: true },
+								{ type: "combo", name: "email", label: "申请人邮箱", validate: "ValidEmail", required: true },
+								//{type:"input",name:"fe_code",label:"验证码",required:true},
+							]
+						}
+					]
+				},
+				{
+					type: "label", label: "确认以上信息", labelWidth: 200, list: [
+						{
+							type: "block", inputWidth: "auto", blockOffset: "0", list: [
+								{ type: "input", name: "code", label: "验证码", validate: "ValidInteger" },
+							]
+						},
+						{
+							type: "block", inputWidth: "auto", blockOffset: "0", list: [
+								{ type: "button", name: "getVcode", value: "获取验证码" },
+								{ type: "newcolumn" },
+								{ type: "button", name: "verification", value: "验证并继续", disabled: true },
+							]
+						},
+					]
+				},
+			]
+		}
+	];
+	var myForm = new dhtmlXForm("form_container", formStructure);
+	var combo = myForm.getCombo("email");
+	combo.attachEvent("onKeyPressed", function (name) {
+		setTimeout(function () {
+			var value = combo.getComboText();
+			generateCombo(combo, value);
+			combo.openSelect();
+		}, 50);
+	});
+	/* 动态生成 Combo 的选项 */
+	function generateCombo(_combo, _value) {
+		if (_value.indexOf("@") > 0) {
+			// 存在 @ ，此时为已填写邮箱后缀，不再补全
+			return false;
+		}
+		combo.clearAll();
+		var emailSuffix = ["@ln.chinamobile.com", "@139.com", "@qq.com", "@"];
+		for (var i in emailSuffix) {
+			_combo.addOption(_value + emailSuffix[i], _value + emailSuffix[i]);
+		}
+	}
+	myForm.attachEvent("onButtonClick", function (id) {
+		if (id == "getVcode") {
+			if (!myForm.validate()) {
+				dhtmlx.message({ text: "请把个人信息填写完整后重试！", type: "error" });
+				return false;
+			}
+			var formData = myForm.getFormData();
+			var emailArray = formData.email.split("@");
+			if (formData.email.indexOf("chinamobile.com") > 0 && emailArray[0].indexOf(".") < 0) {
+				// 邮箱不包含 “.”
+				var e = emailArray[0] + ".tl@" + emailArray[1];
+				var textStr = "您输入的邮箱：<b>" + formData.email + "</b>不包含<b style='color:red'>“.tl”</b><br />是否为您自动补全为：<b>" + e + "</b>？";
+				dhtmlx.confirm({
+					type: "confirm-warning",
+					width: "600px",
+					title: "邮箱输入有误？",
+					text: textStr,
+					ok: "是",
+					cancel: "否",
+					callback: function (result) {
+						if (result) {
+							//formData.aEmail=e;
+							var str = e.split("@")[0];
+							combo.setComboText(e);
+							generateCombo(combo, str);
+						} else {
+							getVcode(formData);
+						}
+					},
+				});
+			} else {
+				getVcode(formData);
+			}
+		}
+		if (id == "verification") {
+			if (!myForm.validate()) {
+				dhtmlx.message({ text: "验证码不合法！", type: "error" });
+				return false;
+			} else {
+				// 基于邮箱验证码登陆并本机缓存登陆信息
+				login(myForm.getFormData());
+			}
+		}
+	});
+	/**
+	 * 获取验证码
+	 */
+	function getVcode(formData) {
+		$.get({
+			type: "GET",
+			beforeSend: function () {
+				myForm.disableItem("getVcode");
+				$('input[name="code"]').attr("placeholder", "...发送中...");
+			},
+			complete: function () {
+				myForm.enableItem("getVcode");
+				$('input[name="code"]').removeAttr("placeholder");
+			},
+			url: "/zx_apply/index/getVcode/" + formData.email + "/",
+			data: formData,
+			success: function (data) {
+				console.log(data);
+				if (data.code == 1) {
+					dhtmlx.alert({ type: "alert", title: " ", text: data.msg, width: "500px" });
+					setTimeout(function () {
+						if ($(".dhtmlx_popup_button div")[0]) {
+							$(".dhtmlx_popup_button div")[0].click()
+						}
+					}, 10000);
+				} else {
+					dhtmlx.alert({ type: "alert-error", title: "发件箱操作异常,请根据页面下方与管理员联系", text: data.msg, width: "600px" });
+				}
+			},
+		});
+		localStorage.setItem("phpweb_user", JSON.stringify(formData));
+		//setCookies("phpweb_aPersion", formData.aPersion, 15);
+		//setCookies("phpweb_aEmail", formData.aEmail, 15);
+	}
+	myForm.attachEvent("onInputChange", function (name, value, form) {
+		if (name == "code") {
+			if (value.length == 4) {
+				myForm.enableItem("verification");
+			} else {
+				myForm.disableItem("verification");
+			}
+		}
+	});
+	function login(_data) {
+		_data['hash'] = location.hash.substring(1);
+		$.post("", _data, function (data) {
+			dhtmlx.alert({
+				type: "alert",
+				title: "&nbsp;",
+				text: data.msg,
+				width: "400px",
+				callback: function () {
+					if (data.code == 1) {
+						location.href = data.url;
+					}
+				}
+			});
+			setTimeout(function () {
+				if ($(".dhtmlx_popup_button div")[0]) {
+					$(".dhtmlx_popup_button div")[0].click()
+				}
+			}, 2000);
+			// 保存登陆信息
+			localStorage.setItem("phpweb_user", JSON.stringify(data.data));
+			return data.code;
+		});
+	}
+/*
+function setCookies(c_name, value, expiresdays) {
+	var exdate = new Date();
+	exdate.setDate(exdate.getDate() + expiresdays);
+	document.cookie = c_name + "=" + escape(value) + ";expires="
+			+ exdate.toGMTString();
+}
+function getCookies(c_name) {
+	if (document.cookie.length > 0) {
+		c_start = document.cookie.indexOf(c_name + "=");
+		if (c_start != -1) {
+			c_start = c_start + c_name.length + 1;
+			c_end = document.cookie.indexOf(";", c_start);
+			if (c_end == -1)
+				c_end = document.cookie.length;
+			return unescape(document.cookie.substring(c_start, c_end));
+		}
+	}
+	return "";
+}
+*/
+</script> {/block}
