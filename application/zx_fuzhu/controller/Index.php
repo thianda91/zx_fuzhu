@@ -1,4 +1,5 @@
 <?php
+
 namespace app\zx_fuzhu\controller;
 
 use think\Controller;
@@ -12,6 +13,7 @@ use Overtrue\Pinyin\Pinyin;
 class Index extends Common
 {
 	public function ch2arr($str)
+	// 未使用
 	{
 		$length = mb_strlen($str, 'utf-8');
 		$array = [];
@@ -28,13 +30,13 @@ class Index extends Common
 	public function index()
 	{
 		if (request()->isGet()) {
-			if (request()->url() != "/zx_fuzhu/index/index.html") {
+			if (request()->pathinfo() != request()->module() . "/index/index.html") {
 				return $this->redirect("index");
 			}
 			return $this->fetch();
 		}
 		if (request()->isPost()) {
-            // post请求 验证登陆
+			// post请求 验证登陆
 			$user = Db::table("phpweb_check")->where('email', input("post.email"))->order("time desc")->find();
 			$msg = "";
 			if (!$user) {
@@ -43,7 +45,7 @@ class Index extends Common
 			if ($user["code"] != input("post.code")) {
 				$msg = "验证码错误";
 			} else {
-                // 验证码正确，继续验证申请人姓名
+				// 验证码正确，继续验证申请人姓名
 				if ($user["name"] != input("post.name")) {
 					$msg = "申请人姓名与申请时不一致<br />申请时为：<b>" . $user["name"] . "</b><br />申请时间：" . $user["time"];
 				}
@@ -58,7 +60,7 @@ class Index extends Common
 				return $this->error($msg, "index", $user);
 			} else {
 				$e = explode("@", $user["email"]);
-                // 附加role。
+				// 附加role。
 				if ($e[1] == "ln.chinamobile.com" && in_array($e[0], config("manageEmails"))) {
 					$user["role"] = "manage";
 				} else {
@@ -68,7 +70,7 @@ class Index extends Common
 				$msg = "欢迎回来，" . $user["name"] . "。";
 				$this->writeLog("登陆", "success", $msg);
 				$hash = input("post.hash");
-				$hashToURL = request()->baseUrl() == "/zx_apply/index/index.html" ? $hash != null ? $hash != "logout" ? "/" . request()->module() . "/" . $hash . ".html" : null : null : null;
+				$hashToURL = request()->pathinfo() == request()->module() . "/index/index.html" ? $hash != null ? $hash != "logout" ? "/" . request()->module() . "/" . $hash . ".html" : null : null : null;
 				$to_url = session("to_url") ? session("to_url") : session("user.role") . "/query";
 				// 跳转优先级：1. location.hash、2. session("to_url")、3. session("user.role") . "/query"
 				$url =  $hashToURL ? $hashToURL : $to_url;
@@ -104,7 +106,7 @@ class Index extends Common
 				unset($data[$v]);
 			}
 			$result = Infotables::createInfo($data, "apply");
-            // 发邮件通知
+			// 发邮件通知
 			$subject = "[待办]ip申请-" . ($data["ifOnu"] ? "onu" : "9312") . "-" . $data["cName"] . $data["instanceId"];
 			$body = "<p>请登陆系统及时处理：</p><br> 内网： <a href='http://10.65.187.202/zx_apply/index/index.html#Manage/todo'>http://10.65.187.202/zx_apply/index/index.html#Manage/todo</a><br>外网： <a href='http://223.100.98.60:800/zx_apply/index/index.html#Manage/todo'>http://223.100.98.60:800/zx_apply/index/index.html#Manage/todo</a>";
 			$this->sendManageNotice($subject, $body, true);
@@ -117,7 +119,7 @@ class Index extends Common
 			$this->log("提交申请", $v);
 			$redirectUrl = "../" . session("user.role") . "/query.html";
 			return $this->result(null, $result, $redirectUrl);
-            // return json_encode ( $data, 256 );
+			// return json_encode ( $data, 256 );
 		}
 	}
 
@@ -133,7 +135,7 @@ class Index extends Common
 		$oldData = Infotables::get(input("param.old"))->toArray();
 		$updates = []; // 记录有更新的字段
 		$change = '';
-        /* 不验证实例标识重复与否 */
+		/* 不验证实例标识重复与否 */
 		$extraHeader = config("extraInfo");
 		foreach ($extraHeader as $k => $v) {
 			$data["extra"][$v] = $data[$v];
@@ -146,7 +148,7 @@ class Index extends Common
 		// 不验证 instanceID
 		$result = Infotables::createInfo($data, "apply");
 		$this->queryDelete(["id" => [input("param.old")]]);
-        // 发邮件通知
+		// 发邮件通知
 		$subject = "[待办]修改申请-" . $data["aPerson"] . "-" . $data["cName"];
 		$oldInfo = "<pre style='color:#088'>A端基站： " . $oldData["aStation"] . "\r\nip: " . $oldData["ip"] . "\r\nvlan: " . $oldData["vlan"] . "</pre>";
 		$body = "<p>原分配信息：</p>" . $oldInfo;
@@ -226,7 +228,7 @@ class Index extends Common
 	public function query()
 	{
 		if (request()->isGet()) {
-            // 访问
+			// 访问
 			$aStation = array_keys(config("aStation"));
 			$zxTitle = [
 				"label" => "zx_apply-new-rb",
@@ -241,7 +243,7 @@ class Index extends Common
 			return $this->fetch();
 		}
 		if (request()->isPost()) {
-            // 获取台账
+			// 获取台账
 			input("post.r") == "info" && $data = $this->getInfoData(input("post.zxType"))->toArray();
 			input("post.r") == "search" && $data = $this->querySearch(input("post."));
 			input("post.r") == "brief" && $data = $this->querySearchBrief(input("post."));
@@ -249,7 +251,7 @@ class Index extends Common
 			return $data;
 		}
 		if (request()->isPut()) {
-            // 相关操作
+			// 相关操作
 			input("post.r") == "copy_one_more" && $data = $this->queryCopyOne(input("post."));
 			input("post.r") == "export" && $data = $this->queryExport();
 			return $data;
@@ -349,7 +351,7 @@ class Index extends Common
 				}
 			}
 			$result += $infotables->isUpdate(true)->allowField(true)->save($v, ["id" => $line_and_id[1]]);
-            // 反查询刚才修改后的数据库里的值，用于前后端数据的一致性
+			// 反查询刚才修改后的数据库里的值，用于前后端数据的一致性
 			$data = $infotables->where("id", $line_and_id[1])->find();
 			foreach ($v as $kk => $vv) {
 				$dbNew[$k][$kk] = $data->$kk;
@@ -367,9 +369,9 @@ class Index extends Common
 	protected function queryDelete($input)
 	{
 		$result = Infotables::destroy($input["id"]);
-        // 操作人记录到备注里
+		// 操作人记录到备注里
 		Infotables::where('id', 2684)->exp('marks', 'concat(marks,\'' . session("user.name") . "已删;" . "')")->update();
-        // 同步删除vlantables
+		// 同步删除vlantables
 		foreach ($input["id"] as $id) {
 			Vlantables::destroy(["infoId" => $id]);
 		}
@@ -386,12 +388,12 @@ class Index extends Common
 			return $this->error("Nothing here. Do not try again!");
 		}
 		$id = $input["copyOne"];
-        /* 不验证实例标识重复与否 */
+		/* 不验证实例标识重复与否 */
 		$data = Infotables::get($id)->getData();
 		// 获取原始数据，去除 id，直接保存
 		unset($data["id"]);
 		$result = Infotables::createInfo($data, "apply");
-        // 发邮件通知
+		// 发邮件通知
 		$subject = "[待办]额外申请-" . $data["aPerson"] . "-" . $data["cName"];
 		$oldInfo = "<pre>A端基站： " . $data["aStation"] . "\r\nip: " . $data["ip"] . "\r\nvlan: " . $data["vlan"] . "</pre>";
 		$body = "<p>原分配信息：</p>" . $oldInfo;

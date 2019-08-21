@@ -1,8 +1,18 @@
 <?php
 return [
 	'version' => "V0.8.3",
-	// 'aStation' => '{"柴河局09":"CHJ-09","西丰新局":"XF-10","昌图新局":"CT-11","昌图老局":"CT-12","西丰老局":"XF-13","开原老局":"KY-14","铁岭县":"TLX-15","清河局":"QH-16","新台子":"XTZ-17","调兵山新局":"DBS-18","调兵山老局":"DBS-19","开原新局":"KY-20","柴河局-华为":"CHJ-21","柴河局-中兴":"CHJ-22","银州区":"YZL-23"}',
-	'systemURLString' => "<br> 内网： <a href='http://10.65.178.199/zx_fuzhu/index/index.html#Manage/todo'>http://10.65.178.119/zx_fuzhu/index/index.html#Manage/todo</a><br>外网： <a href='http://223.100.98.114:800/zx_fuzhu/index/index.html#Manage/todo'>http://223.100.98.60:800/zx_fuzhu/index/index.html#Manage/todo</a>",
+	'copyright' => 'X.Da',
+	'contact' => '1748104738@139.com',
+	'domain_name' => 'https://nextflow.icu/',
+	'github_repo' => 'thianda91/zx_fuzhu',
+	'email' => [
+		'SMTP' => 'smtp.139.com',
+		'Port' => 465,
+	],
+	'systemURLString' => "<br> 内网： <a href='http://10.65.187.199/zx_fuzhu/index/index.html#Manage/todo'>http://10.65.187.119/zx_fuzhu/index/index.html#Manage/todo</a><br>外网： <a href='http://223.100.98.114:800/zx_fuzhu/index/index.html#Manage/todo'>http://223.100.98.60:800/zx_fuzhu/index/index.html#Manage/todo</a>",
+	'moduleName' => "zx_fuzhu",
+	'address_local' => "10.65.187.199",
+	'address_wide' => "tl.nextflow.icu:800",
 	'aStation' => [
 		"请选择" => null,
 		"柴河局09" => "CHJ-09",

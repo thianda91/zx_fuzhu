@@ -1,4 +1,5 @@
-{extend name="common@Public/base" /}{block name="leftmenu"} {include file="Common/leftmenu_zx_apply_index" /} {/block} {block
+{extend name="common@Public/base" /}{block name="leftmenu"} {include file="Common/leftmenu_zx_apply_index" /} {/block}
+{block
 name="head"}
 <style>
 	.dhtmlx_message_area {
@@ -129,22 +130,16 @@ steps:
 			var emailArray = formData.email.split("@");
 			if (formData.email.indexOf("chinamobile.com") > 0 && emailArray[0].indexOf(".") < 0) {
 				// 邮箱不包含 “.”
-				var e = emailArray[0] + ".tl@" + emailArray[1];
-				var textStr = "您输入的邮箱：<b>" + formData.email + "</b>不包含<b style='color:red'>“.tl”</b><br />是否为您自动补全为：<b>" + e + "</b>？";
+				var textStr = "您输入的邮箱：<b>" + formData.email + "</b>不包含<b style='color:red'>“地市公司的后缀”</b><br />确定继续？";
 				dhtmlx.confirm({
 					type: "confirm-warning",
 					width: "600px",
 					title: "邮箱输入有误？",
 					text: textStr,
-					ok: "是",
+					ok: "继续",
 					cancel: "否",
 					callback: function (result) {
 						if (result) {
-							//formData.aEmail=e;
-							var str = e.split("@")[0];
-							combo.setComboText(e);
-							generateCombo(combo, str);
-						} else {
 							getVcode(formData);
 						}
 					},
@@ -177,7 +172,7 @@ steps:
 				myForm.enableItem("getVcode");
 				$('input[name="code"]').removeAttr("placeholder");
 			},
-			url: "/zx_apply/index/getVcode/" + formData.email + "/",
+			url: "/{$Request.module}/index/getVcode/" + formData.email + "/",
 			data: formData,
 			success: function (data) {
 				console.log(data);
@@ -231,24 +226,24 @@ steps:
 		});
 	}
 /*
-function setCookies(c_name, value, expiresdays) {
-	var exdate = new Date();
-	exdate.setDate(exdate.getDate() + expiresdays);
-	document.cookie = c_name + "=" + escape(value) + ";expires="
-			+ exdate.toGMTString();
-}
-function getCookies(c_name) {
-	if (document.cookie.length > 0) {
-		c_start = document.cookie.indexOf(c_name + "=");
-		if (c_start != -1) {
-			c_start = c_start + c_name.length + 1;
-			c_end = document.cookie.indexOf(";", c_start);
-			if (c_end == -1)
-				c_end = document.cookie.length;
-			return unescape(document.cookie.substring(c_start, c_end));
-		}
+	function setCookies(c_name, value, expiresdays) {
+		var exdate = new Date();
+		exdate.setDate(exdate.getDate() + expiresdays);
+		document.cookie = c_name + "=" + escape(value) + ";expires="
+				+ exdate.toGMTString();
 	}
-	return "";
-}
-*/
+	function getCookies(c_name) {
+		if (document.cookie.length > 0) {
+			c_start = document.cookie.indexOf(c_name + "=");
+			if (c_start != -1) {
+				c_start = c_start + c_name.length + 1;
+				c_end = document.cookie.indexOf(";", c_start);
+				if (c_end == -1)
+					c_end = document.cookie.length;
+				return unescape(document.cookie.substring(c_start, c_end));
+			}
+		}
+		return "";
+	}
+	*/
 </script> {/block}

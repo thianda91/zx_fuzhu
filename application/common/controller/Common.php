@@ -75,7 +75,7 @@ class Common extends Controller
 				foreach ($val as $k => $v) {
 					if ($id == null || $k == 'id')
 						// 让 id 为 第一个值，或者为id值
-					$id = $v;
+						$id = $v;
 					$theData[] = $v;
 				}
 				$data_arr[] = [
@@ -83,8 +83,7 @@ class Common extends Controller
 					"data" => $theData
 				];
 			}
-		} else {
-		}
+		} else { }
 		return json_encode([
 			"rows" => $data_arr
 		], JSON_UNESCAPED_UNICODE);
@@ -175,8 +174,8 @@ class Common extends Controller
 		$field_str = implode(",", $field_arr);
 		$result = Db::name($table)->distinct($distinct)->where($where)->field($field_str)->order($order)->select();
 		return $result; // 自动处理成 json()
-			                // return json_encode($result, 256);//Content-Type:text/html
-			                // return json ( $result ); // 返回 Content-Type : application/json
+		// return json_encode($result, 256);//Content-Type:text/html
+		// return json ( $result ); // 返回 Content-Type : application/json
 	}
 	public static function get_combo_options2($column = '', $table = '')
 	{
@@ -229,16 +228,16 @@ class Common extends Controller
 		$address = $e;
 		$subject = '[ESWeb]验证码：' . sprintf("%04s", $vcode) . '，可在30分钟内使用。';
 		$body = '<p style="color:#088bff;">请确认是您申请了邮箱登录的验证码。若非本人操作，请忽略本邮件。</p><hr /><br /><br /><br /><br />
-				<div style="width:500px;padding:30px;background-color:#000;color:#bbb;"><p>Powered by <a style="color:#eee;font-weight:bold;" href="https://github.com/thianda/")">X.Da</a></p>
-				<p><a style="color:#eee;font-weight:bold;" href="mailto:thianda91@outlook.com")">Connect me</a>: thianda91@outlook.com</p>
-				<p>Read <a style="color:#eee;font-weight:bold;" href="https://thianda.github.io/phpweb/notes/zx-apply.html">this</a> to find more</p></div>';
+				<div style="width:500px;padding:30px;background-color:#000;color:#bbb;"><p>Powered by 
+				<a style="color:#eee;font-weight:bold;" href="' . config('domain_name') . '")">' . config('copyright') . '</a></p>
+				<p>Connect me: <a style="color:#eee;font-weight:bold;" href="mailto:' . config('contact') . '">' . config('contact') . '</a></p>
+				<p>Visit <a style="color:#eee;font-weight:bold;" href="https://github.com/' . config('github_repo') . '">here</a> to find more</p></div>';
 		$sendEmail = $this->sendEmail($address, $subject, $body);
 		// $sendEmail = true; // 测试用例
 		if (is_bool($sendEmail)) {
 			$msg = "验证码已通过邮件发送，请到邮箱内查收主题包含[ESWeb]的邮件。";
 			// 新用户，通知管理员
-			if (Db::table("phpweb_check")->where("email", $e)->find()) {
-			} else {
+			if (Db::table("phpweb_check")->where("email", $e)->find()) { } else {
 				$title = "[新用户]" . $e;
 				$msg = "来自IP： " . request()->ip() . "，第一次获取了验证码。";
 				$this->noticeXianda($title, $msg);

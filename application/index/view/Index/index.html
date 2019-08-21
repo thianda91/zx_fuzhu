@@ -1,16 +1,17 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-<meta charset="UTF-8">
-<title>-</title>
-<link rel="STYLESHEET" type="text/css"
-	href="/static/index.css?v=2017-06-07">
+	<meta charset="UTF-8">
+	<title>-</title>
+	<link rel="STYLESHEET" type="text/css" href="__STATIC__/index.css?v=2019-08-21">
 </head>
+
 <body>
 
 	<div class="header">
 		<div class="_title">
-			<a href="">&nbsp;</a>
+			<a href="">综合导航</a>
 			<div class="nav">
 				<div id="tp-weather-widget"></div>
 				<div id="tips" class="tips">欢迎使用</div>
@@ -22,11 +23,10 @@
 			<div class="content">
 				<div class="wraper">
 					<div class="module">
-						<a href="/esweb">Excel服务器</a>
+						<a href="/zx_fuzhu/index/index.html">互联网专线IP地址台账信息化</a>
 					</div>
 					<div class="function">
-						<a target="_blank" href="/esweb">登录</a><a target="_blank"
-							href="esserver/index" style="color: #f30dec;">密码修改/找回</a>
+						<a href="/zx_fuzhu/index/apply">专线申请</a> <a href="/zx_fuzhu/manager/todo">管理员待办</a>
 					</div>
 				</div>
 				<div class="wraper">
@@ -39,13 +39,11 @@
 				</div>
 			</div>
 		</div>
-{php}
-echo "您的IP是：".request()->ip();
-{/php}
+		<p>您的IP是： {$Request.ip}</p>
 	</div>
 	<script>
-		(function(T, h, i, n, k, P, a, g, e) {
-			g = function() {
+		(function (T, h, i, n, k, P, a, g, e) {
+			g = function () {
 				P = h.createElement(i);
 				a = h.getElementsByTagName(i)[0];
 				P.src = k;
@@ -54,7 +52,7 @@ echo "您的IP是：".request()->ip();
 				a.parentNode.insertBefore(P, a)
 			};
 			T["ThinkPageWeatherWidgetObject"] = n;
-			T[n] || (T[n] = function() {
+			T[n] || (T[n] = function () {
 				(T[n].q = T[n].q || []).push(arguments)
 			});
 			T[n].l = +new Date();
@@ -64,23 +62,23 @@ echo "您的IP是：".request()->ip();
 				T.addEventListener("load", g, false)
 			}
 		}(window, document, "script", "tpwidget",
-				"//widget.thinkpage.cn/widget/chameleon.js"))
+			"//widget.thinkpage.cn/widget/chameleon.js"))
 	</script>
 	<script>
 		if (typeof tpwidget != 'undefined') {
 			tpwidget("init", {
-				"flavor" : "slim",
-				"location" : "WZ809BF6B5HR",
-				"geolocation" : "enabled",
-				"language" : "zh-chs",
-				"unit" : "c",
-				"theme" : "chameleon",
-				"container" : "tp-weather-widget",
-				"bubble" : "enabled",
-				"alarmType" : "badge",
-				"color" : "#FFFFFF",
-				"uid" : "UF536FF120",
-				"hash" : "14d72d6826cf25861729a291bb14954e"
+				"flavor": "slim",
+				"location": "WZ809BF6B5HR",
+				"geolocation": "disabled",
+				"language": "zh-chs",
+				"unit": "c",
+				"theme": "chameleon",
+				"container": "tp-weather-widget",
+				"bubble": "enabled",
+				"alarmType": "badge",
+				"color": "#FFFFFF",
+				"uid": "UF536FF120",
+				"hash": "64a40762e09810139088de8445ef7b65"
 			});
 			tpwidget("show");
 		}
@@ -111,11 +109,11 @@ echo "您的IP是：".request()->ip();
 		if (sec < 10)
 			sec = "0" + sec;
 		var arr_week = new Array("星期日", "星期一", "星期二", "星期三", "星期四", "星期五",
-				"星期六");
+			"星期六");
 		week = arr_week[day];
 		var time = "";
 		time = year + "年" + month + "月" + date + "日" + " " + hour + ":" + minu
-				+ ":" + sec + " " + week;
+			+ ":" + sec + " " + week;
 
 		document.getElementById("tips").innerHTML = time;
 
@@ -123,4 +121,5 @@ echo "您的IP是：".request()->ip();
 	}
 	//document.getElementById("tips").innerHTML=new Date();
 </script>
+
 </html>
