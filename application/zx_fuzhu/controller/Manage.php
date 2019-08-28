@@ -1,4 +1,5 @@
 <?php
+
 namespace app\zx_fuzhu\controller;
 
 use think\Controller;
@@ -46,7 +47,7 @@ class Manage extends Index
 			$info = Infotables::get(input("post.id")); // 获取器数据
 			$data = input("post.");
 			if ($info) {
-                // 设置不需要输出的字段
+				// 设置不需要输出的字段
 				$detail = $info->hidden([
 					'aDate',
 					'tags',
@@ -69,7 +70,7 @@ class Manage extends Index
 			$detail["ip"] = $info->ip; // 更正ip为 str 形式
 			$detail["ipB"] = $info->ipB; // 更正ipB
 			if ($req == "getDetail") {
-                // 返回单条数据及同客户名的信息摘要
+				// 返回单条数据及同客户名的信息摘要
 				$cName = mb_substr($info->cName, 2, 10, "utf-8");
 				$field = "id,instanceId,cName,create_time,neFactory,vlan,aStation,ip,aPerson,aEmail,delete_time";
 				$relative = collection(Infotables::withTrashed()->where("cName", "like", "%" . $cName . "%")->where("id", "<>", $info->id)->field($field)->select())->toArray();
@@ -146,13 +147,13 @@ class Manage extends Index
 			$data["extra"][$v] = $data[$v];
 			unset($data[$v]);
 		}
-        // unset ( $data ["delete_time"] );
+		// unset ( $data ["delete_time"] );
 		$infotables = new Infotables();
-        // 更新单条数据
+		// 更新单条数据
 		$result = $infotables->isUpdate(true)->save($data, [
 			"id" => $data["id"]
 		]);
-        // 更新最后分配的IP
+		// 更新最后分配的IP
 		isset($data["ip"]) && Iptables::setLastIp($data["ip"]);
 		$infotables->find($data["id"]);
 		return $result;
@@ -185,13 +186,12 @@ class Manage extends Index
 		$db = Infotables::field($field)->find(input("post.id"));
 		$values = array_values($db->toArray());
 		// $title = '[ip已分配]-' . $db->bandWidth . "M-" . $db->cName;
-		$title = '铁岭IDC.ISP-' . $db->ip . "-" . $db->cName;
-		$contact = base64_decode('a2FuZ2xpQGV2ZXJzZWMuY24=');
+		$title = config('idc_title_city') . 'IDC.ISP-' . $db->ip . "-" . $db->cName;
+		$contact = config('idc_contact');
+		$contact_str = implode(',', $contact);
 		$body = "";
-		// $body .= "<p>请根据下面的ip字段，填写IDC/ISP备案信息，最新的要求和模板可在内网访问： <a href='http://10.65.187.202/i/isp'>http://10.65.187.202/i/isp</a> 查看和下载。</p>";
-		// $body .= "<pre style='color:#000;background-color:#ccc;padding:15px;'><p style='color:red'>目前已实现自动生成 idc.isp 备案信息。若本邮件存在附件，";
 		$body .= "<p style='color:#000;background-color:#ccc;font-size:12px;'>备案信息由客户经理<span style='color:blue'>" . $db->mPerson . "(" .  $db->mEmail;
-		$body .= ")</span>负责填写，并确保其完整性、准确性。<br>本邮件由辅助平台自动发送给厂家联系人：" . $contact . "，并抄送给 IP 分配的管理员。</p>";
+		$body .= ")</span>负责填写，并确保其完整性、准确性。<br>本邮件由辅助平台自动发送给厂家联系人：" . $contact_str . "，并抄送给 IP 分配的管理员。</p>";
 		$body .= "如备案信息有误，请厂家联系人联系客户经理。由客户经理负责登陆辅助平台进行更正重新提交，或直接回复给厂家联系人。";
 		$body .= "<br><table style='border-collapse:collapse;border:none;'>";
 		for ($i = 0; $i < count($items); $i++) {
@@ -223,7 +223,7 @@ class Manage extends Index
 	public function query()
 	{
 		if (request()->isGet()) {
-            // 访问
+			// 访问
 			$aStation = array_keys(config("aStation"));
 			$zxTitle = [
 				"label" => "zx_apply-new-rb",
@@ -238,8 +238,8 @@ class Manage extends Index
 			return $this->fetch();
 		}
 		if (request()->isPost()) {
-            // 获取台账
-            // return $this->getInfoData();
+			// 获取台账
+			// return $this->getInfoData();
 			input("post.r") == "info" && $data = $this->getInfoData(input("post.zxType"))->toArray();
 			input("post.r") == "detail" && $data = Infotables::get(input("post.id"))->toJson();
 			input("post.r") == "search" && $data = $this->querySearch(input("post."));
@@ -248,7 +248,7 @@ class Manage extends Index
 			return $data;
 		}
 		if (request()->isPut()) {
-            // 相关操作
+			// 相关操作
 			input("post.r") == "script" && $data = Generator::generateScript(input("post.id/a")[0]);
 			input("post.r") == "export_zg" && $data = Generator::generateZgWorkflow(input("post.id"));
 			input("post.r") == "export_jtip" && $data = Generator::generateJtIp(explode(",", input("post.id")));
@@ -286,16 +286,16 @@ class Manage extends Index
 			$postData = input("post.data");
 			$type = input("post.type");
 			$dataHeader = $this->getHeader($zxInfoTitle["label"], $zxInfoTitle["order"], true);
-            // 获取数据库的列名
+			// 获取数据库的列名
 			$dataHeader = explode(",", $dataHeader);
-            // 根据列名和数据转成php数组
-            // $postData = substr ( $postData, 3 ); // 莫名奇妙的前三个字节是垃圾数据。3天才研究出来，只能这样解决！！！(目前已在前端解决)
+			// 根据列名和数据转成php数组
+			// $postData = substr ( $postData, 3 ); // 莫名奇妙的前三个字节是垃圾数据。3天才研究出来，只能这样解决！！！(目前已在前端解决)
 			$data = $this->csv_to_array($dataHeader, $postData);
-            // return dump($data);
-            // 获取额外的字段
+			// return dump($data);
+			// 获取额外的字段
 			$extraHeader = config("extraInfo");
 			foreach ($data as $k => $v) {
-                // 清除空元素
+				// 清除空元素
 				$data[$k] = array_filter($v);
 				$temp = [];
 				foreach ($extraHeader as $kk => $vv) {
@@ -310,13 +310,13 @@ class Manage extends Index
 				}
 				$data[$k]["aDate"] = isset($data[$k]["aDate"]) ? $data[$k]["aDate"] : "";
 				if ($this->checkDateIsValid($data[$k]["aDate"])) {
-                    // 申请时间转存到 create_time
+					// 申请时间转存到 create_time
 					$data[$k]["create_time"] = strtotime($data[$k]["aDate"]);
 				}
 			}
-            // 若导入，ip/vlan信息要单独存储。
+			// 若导入，ip/vlan信息要单独存储。
 			$result = Infotables::createInfo($data, $type);
-            // $result = $info->save($data[0]);
+			// $result = $info->save($data[0]);
 			return dump($result);
 		}
 		if (request()->isGet()) {
@@ -339,7 +339,7 @@ class Manage extends Index
 	 */
 	public function import()
 	{
-        // post数据传给 _ht_apply()
+		// post数据传给 _ht_apply()
 		return $this->fetch();
 	}
 
@@ -365,7 +365,7 @@ class Manage extends Index
 			}
 			if (input("post.exec") == "cal_ip") {
 				$unusedIps = [];
-                // todo
+				// todo
 				return $this->result($unusedIps, 1);
 			}
 			if (input("post.exec") == "ok_vlan") {
@@ -388,12 +388,12 @@ class Manage extends Index
 			if ($ip)
 				return $this->error("互联 ip 冲突，", null, $ip["cName"]);
 		}
-        // 设置ipMask
+		// 设置ipMask
 		$ip_array = Iptables::ip_parse($data["ip"]);
 		$data["ip"] = $ip_array[2];
 		$data["ipMask"] = $ip_array[1];
 		if ($data["ipB"] == "") {
-            // 设置 ipB为null
+			// 设置 ipB为null
 			$data["ipB"] = null;
 			$data["ipBMask"] = null;
 			return $data;
@@ -403,11 +403,11 @@ class Manage extends Index
 			if ($ipB)
 				return $this->error("业务 ip 冲突，", null, $ipB["cName"]);
 		}
-        // 设置ipBMask
+		// 设置ipBMask
 		$ipB_array = Iptables::ip_parse($data["ipB"]);
-        /* 若未提供ipBMask，默认强制设置ipBMask为-8 */
+		/* 若未提供ipBMask，默认强制设置ipBMask为-8 */
 		$ipB_array[1] == -1 && $ipB_array = Iptables::ip_parse(Iptables::ip_export($ipB_array[0], -8));
-        /* 修正ip为ip_start */
+		/* 修正ip为ip_start */
 		$data["ipB"] = $ipB_array[2];
 		$data["ipBMask"] = $ipB_array[1];
 		return $data;
@@ -463,7 +463,7 @@ class Manage extends Index
 		if (!$unixTime) { // strtotime转换不对，日期格式显然不对。
 			return false;
 		}
-        // 校验日期的有效性，只要满足其中一个格式就OK
+		// 校验日期的有效性，只要满足其中一个格式就OK
 		foreach ($formats as $format) {
 			if (date($format, $unixTime) == $date) {
 				return true;
@@ -471,5 +471,4 @@ class Manage extends Index
 		}
 		return false;
 	}
-
 }

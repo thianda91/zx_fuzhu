@@ -253,9 +253,9 @@
 			<ul>
 				<li>系统版本： {$version|default="dev"}</li>
 				<li style="color: #98c0ee;">|</li>
-				<li>版权： thianda</li>
+				<li>版权： {$think.config.copyright}</li>
 				<li style="color: #98c0ee;">|</li>
-				<li>邮箱： 1748104738@139.com</li>
+				<li>邮箱： {$Think.config.contact}</li>
 			</ul>
 		</div>
 	</div>
@@ -347,7 +347,7 @@
 		dhtmlx.alert({
 			title: "关于本系统",
 			width: "600px",
-			text: "本系统开源在<a href='https://github.com/thianda91/zx_fuzhu' target='_blank'>Github</a>，遵循<a href='https://github.com/thianda91/zx_fuzhu/blob/master/LICENSE' target='_blank'>MIT协议</a>。<br>可查看<a href='https://github.com/thianda/phpweb/blob/master/CHANGELOG.md' target='_blank'>更新日志</a>，如有疑问请提交Issue。",
+			text: "本系统开源在<a href='https://github.com/{$Think.config.github_repo}' target='_blank'>Github</a>，遵循<a href='https://github.com/{$Think.config.github_repo}/blob/master/LICENSE' target='_blank'>MIT协议</a>。<br>可查看<a href='https://github.com/{$Think.config.github_repo}/blob/master/CHANGELOG.md' target='_blank'>更新日志</a>，如有疑问请提交Issue。",
 		});
 	}
 </script> {block name="script"} {/block}

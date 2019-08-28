@@ -24,7 +24,6 @@ class Common extends Controller
 		}
 		// url : index.php/【MODULE】/【CONTROLLER】/【ACTION】.html
 		$permitModule = [
-			"esserver"
 		];
 		$permitController = [ // "Tool"
 		];
@@ -123,15 +122,6 @@ class Common extends Controller
 		$csvstr = substr($csvstr, 0, strlen($csvstr) - 1);
 		return $csvstr;
 	}
-	function zz()
-	{
-		return dump($this->csv_to_array([
-			"a",
-			"b",
-			"c"
-		], "1,2,3"));
-	}
-
 	/**
 	 * csv 转 php数组
 	 *
@@ -226,7 +216,7 @@ class Common extends Controller
 			$vcode = rand(0, 9999);
 		} while (in_array($vcode, $codes));
 		$address = $e;
-		$subject = '[ESWeb]验证码：' . sprintf("%04s", $vcode) . '，可在30分钟内使用。';
+		$subject = '[' . config('moduleName') . ']验证码：' . sprintf("%04s", $vcode) . '，可在30分钟内使用。';
 		$body = '<p style="color:#088bff;">请确认是您申请了邮箱登录的验证码。若非本人操作，请忽略本邮件。</p><hr /><br /><br /><br /><br />
 				<div style="width:500px;padding:30px;background-color:#000;color:#bbb;"><p>Powered by 
 				<a style="color:#eee;font-weight:bold;" href="' . config('domain_name') . '")">' . config('copyright') . '</a></p>
@@ -235,12 +225,12 @@ class Common extends Controller
 		$sendEmail = $this->sendEmail($address, $subject, $body);
 		// $sendEmail = true; // 测试用例
 		if (is_bool($sendEmail)) {
-			$msg = "验证码已通过邮件发送，请到邮箱内查收主题包含[ESWeb]的邮件。";
+			$msg = '验证码已通过邮件发送，请到邮箱内查收主题包含[' . config('moduleName') . ']的邮件。';
 			// 新用户，通知管理员
 			if (Db::table("phpweb_check")->where("email", $e)->find()) { } else {
 				$title = "[新用户]" . $e;
 				$msg = "来自IP： " . request()->ip() . "，第一次获取了验证码。";
-				$this->noticeXianda($title, $msg);
+				$this->noticeAdmin($title, $msg);
 			}
 			// 存入数据库
 			$insertData = [
@@ -325,9 +315,9 @@ class Common extends Controller
 		$result = $this->sendEmail($address, $title, $msg);
 		return $result;
 	}
-	protected function noticeXianda($title = "", $msg = "")
+	protected function noticeAdmin($title = "", $msg = "")
 	{
-		$this->noticeManage($title, $msg, "1748104738@139.com");
+		$this->noticeManage($title, $msg, config('contact'));
 	}
 	/**
 	 * 记录系统log
@@ -362,13 +352,18 @@ class Common extends Controller
 				Config::parse("static/email_config", "ini");
 				return Config::get("email_account.Password");
 			});
+			$account['Nickname'] = Cache::remember("email_nickname", function () {
+				Config::parse("static/email_config", "ini");
+				return Config::get("email_account.Nickname");
+				// 专线开通辅助
+			});
 			$mail->Host = $account['SMTP']; // Specify main and backup SMTP servers
 			$mail->SMTPAuth = true; // Enable SMTP authentication
 			$mail->Username = $account['Username']; // SMTP username
 			$mail->Password = $account['Password']; // SMTP password
 			$mail->SMTPSecure = 'ssl'; // Enable TLS encryption, `ssl` also accepted
 			$mail->Port = $account['Port']; // TCP port to connect to
-			$mail->setFrom($account['Username'], '专线开通辅助');
+			$mail->setFrom($account['Username'], $account['Nickname']);
 			if (is_string($address)) {
 				$mail->addAddress($address);
 			} else {

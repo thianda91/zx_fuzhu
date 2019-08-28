@@ -21,11 +21,11 @@ class Index extends Controller
 		$mail->Host = 'smtp.139.com'; // Specify main and backup SMTP servers
 		$mail->SMTPAuth = true; // Enable SMTP authentication
 		$mail->Username = "tl_excelserver@139.com"; // SMTP username
-		$mail->Password = 'HUYUE6868816'; // SMTP password
+		$mail->Password = 'passwd'; // SMTP password
 		// $mail->SMTPSecure = 'tls'; // Enable TLS encryption, `ssl` also accepted
 		$mail->Port = 25; // TCP port to connect to
-		$mail->setFrom('tl_excelserver@139.com', 'Excel服务器');
-		$mail->addAddress('1748104738@139.com'); // Name is optional
+		$mail->setFrom('tl_excelserver@139.com', 'my服务器');
+		$mail->addAddress(config('contact')); // Name is optional
 		// $mail->addReplyTo ( 'info@example.com', 'Information' );
 		// $mail->addCC ( 'cc@example.com' );
 		// $mail->addBCC ( 'bcc@example.com' );

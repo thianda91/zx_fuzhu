@@ -1,18 +1,19 @@
 <?php
 return [
 	'version' => "V0.8.3",
-	'copyright' => 'X.Da',
-	'contact' => '1748104738@139.com',
-	'domain_name' => 'https://nextflow.icu/',
-	'github_repo' => 'thianda91/zx_fuzhu',
 	'email' => [
 		'SMTP' => 'smtp.139.com',
 		'Port' => 465,
 	],
-	'systemURLString' => "<br> 内网： <a href='http://10.65.187.199/zx_fuzhu/index/index.html#Manage/todo'>http://10.65.187.119/zx_fuzhu/index/index.html#Manage/todo</a><br>外网： <a href='http://223.100.98.114:800/zx_fuzhu/index/index.html#Manage/todo'>http://223.100.98.60:800/zx_fuzhu/index/index.html#Manage/todo</a>",
+	'idc_contact' => [
+		'kangli@eversec.cn',
+		'sunyunbo@eversec.cn',
+	],
+	'idc_title_city' => '',
 	'moduleName' => "zx_fuzhu",
 	'address_local' => "10.65.187.199",
 	'address_wide' => "tl.nextflow.icu:800",
+	'webTitle' => "数据专线开通-辅助平台 --X.Da",
 	'aStation' => [
 		"请选择" => null,
 		"柴河局09" => "CHJ-09",
@@ -54,7 +55,6 @@ return [
 	// 登陆后跳转到manage模块的账号
 	'manageEmails' => [
 		"yuxianda.tl",
-		"buyu.tl",
 		"yangjietl.tl"
 	],
 	// 列宽度

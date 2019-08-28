@@ -108,7 +108,7 @@ class Index extends Common
 			$result = Infotables::createInfo($data, "apply");
 			// 发邮件通知
 			$subject = "[待办]ip申请-" . ($data["ifOnu"] ? "onu" : "9312") . "-" . $data["cName"] . $data["instanceId"];
-			$body = "<p>请登陆系统及时处理：</p><br> 内网： <a href='http://10.65.187.202/zx_apply/index/index.html#Manage/todo'>http://10.65.187.202/zx_apply/index/index.html#Manage/todo</a><br>外网： <a href='http://223.100.98.60:800/zx_apply/index/index.html#Manage/todo'>http://223.100.98.60:800/zx_apply/index/index.html#Manage/todo</a>";
+			$body = $this->todo_link_str();
 			$this->sendManageNotice($subject, $body, true);
 			$v = [
 				"username" => session("user.name"),
@@ -164,7 +164,7 @@ class Index extends Common
 		}
 		$change == '' && $change = "无";
 		$body .= $change;
-		$body .= "</pre><p>请登陆系统及时处理：</p>" . config("systemURLString");
+		$body .= $this->todo_link_str();
 		$this->sendManageNotice($subject, $body, true);
 		$v = [
 			"username" => session("user.name"),
@@ -398,7 +398,7 @@ class Index extends Common
 		$oldInfo = "<pre>A端基站： " . $data["aStation"] . "\r\nip: " . $data["ip"] . "\r\nvlan: " . $data["vlan"] . "</pre>";
 		$body = "<p>原分配信息：</p>" . $oldInfo;
 		$body .= "<p>现申请额外的IP，需要您核实。";
-		$body .= "</p><p>请登陆系统及时处理：</p>" . config("systemURLString");
+		$body .= $this->todo_link_str();
 		$this->sendManageNotice($subject, $body);
 		$v = [
 			"username" => session("user.name"),
@@ -494,5 +494,10 @@ class Index extends Common
 		}
 		$addCurrentUser && $address["CC1"] = session("user.email");
 		$this->sendEmail($address, $subject, $body);
+	}
+
+	private function todo_link_str()
+	{
+		return "<p>请登陆系统及时处理：</p><br> 内网： <a href='http://" . config('address_local') . "/" . config('moduleName') . "/index/index.html#Manage/todo'>http://" . config('address_local') . "/" . config('moduleName') . "/index/index.html#Manage/todo</a><br>外网： <a href='http://" . config('address_wide') . "/" . config('moduleName') . "/index/index.html#Manage/todo'>http://" . config('address_wide') . "/" . config('moduleName') . "/index/index.html#Manage/todo</a>";
 	}
 }

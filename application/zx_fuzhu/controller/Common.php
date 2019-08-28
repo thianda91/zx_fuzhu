@@ -14,25 +14,8 @@ class Common extends CCommon
 	 */
 	public function _initialize()
 	{
-		$this->checkAuth();
 		parent::_initialize();
-		$this->assign("title", "数据专线开通-辅助平台 --X.Da");
-	}
-	private function checkAuth()
-	{
-		$u = input('get.y');
-		$users = [
-			'y' => 'xda',
-			'sjbz' => '数据班组'
-		];
-		foreach ($users as $k => $v) {
-			if ($k == $u) {
-				session("user", [
-					'name' => $v,
-					'role' => 'manage'
-				]);
-			}
-		}
+		$this->assign("title", config('webTitle'));
 	}
 	/**
 	 * 退出登录
