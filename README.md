@@ -2,7 +2,7 @@
 
 [![GitHub license](https://img.shields.io/github/license/thianda91/zx_fuzhu)](https://github.com/thianda91/zx_fuzhu/blob/master/LICENSE)  [![HitCount](http://hits.dwyl.io/thianda91/zx_fuzhu.svg)](http://hits.dwyl.io/thianda91/zx_fuzhu)
 
-README | [中文](README_zh-CN.md)
+English | [中文](README_zh-CN.md)
 
 ### Description
 

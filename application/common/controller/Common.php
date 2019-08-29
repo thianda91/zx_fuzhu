@@ -4,10 +4,8 @@ namespace app\common\controller;
 
 use think\Controller;
 use think\Request;
-use think\Config;
 use think\Db;
 use think\Session;
-use think\Cache;
 use PHPMailer\PHPMailer\PHPMailer;
 
 class Common extends Controller
@@ -23,8 +21,7 @@ class Common extends Controller
 			return $this->error("非法访问！你很6啊。然而我会带你回去。");
 		}
 		// url : index.php/【MODULE】/【CONTROLLER】/【ACTION】.html
-		$permitModule = [
-		];
+		$permitModule = [];
 		$permitController = [ // "Tool"
 		];
 		$permitActions = [
@@ -344,26 +341,14 @@ class Common extends Controller
 			$mail->SetLanguage('zh_cn');
 			// $mail->SMTPDebug = 1;
 			$account = config("email");
-			$account['Username'] = Cache::remember("email_username", function () {
-				Config::parse("static/email_config", "ini");
-				return Config::get("email_account.Username");
-			});
-			$account['Password'] = Cache::remember("email_password", function () {
-				Config::parse("static/email_config", "ini");
-				return Config::get("email_account.Password");
-			});
-			$account['Nickname'] = Cache::remember("email_nickname", function () {
-				Config::parse("static/email_config", "ini");
-				return Config::get("email_account.Nickname");
-				// 专线开通辅助
-			});
+			$myAddress = config("email.username");
 			$mail->Host = $account['SMTP']; // Specify main and backup SMTP servers
 			$mail->SMTPAuth = true; // Enable SMTP authentication
-			$mail->Username = $account['Username']; // SMTP username
-			$mail->Password = $account['Password']; // SMTP password
+			$mail->Username = $myAddress; // SMTP username
+			$mail->Password = config("email.password"); // SMTP password
 			$mail->SMTPSecure = 'ssl'; // Enable TLS encryption, `ssl` also accepted
 			$mail->Port = $account['Port']; // TCP port to connect to
-			$mail->setFrom($account['Username'], $account['Nickname']);
+			$mail->setFrom($myAddress, config("email.username"));
 			if (is_string($address)) {
 				$mail->addAddress($address);
 			} else {

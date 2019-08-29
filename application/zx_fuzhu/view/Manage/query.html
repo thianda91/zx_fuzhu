@@ -252,7 +252,7 @@
                             // timeout is used to make sure the menu collapsed before alert is shown
                             parent.dhtmlx.alert({
                                 title: "特别鸣谢",
-                                text: "本菜单由 X.Da 自定义。感谢 <a href='https://github.com/thianda' target='_blank'>X.Da</a>"
+                                text: "本菜单由 {$Think.config.copyright} 自定义。感谢 <a href='javascript:void(0)' target='_blank'>{$Think.config.copyright}</a>"
                             });
                         }, 100);
                     } else if (key === 'fullUpdate') {
@@ -1114,7 +1114,7 @@
         XLSX.utils.book_append_sheet(wb, ws, ws_name);
         if (!wb.Props) wb.Props = {};
         wb.Props.Title = "Auto Exported files";
-        wb.Props.Author = "X.Da";
+        wb.Props.Author = '{$Think.config.copyright}';
         //var options = {compression: true};
         if (!wb.Workbook) wb.Workbook = {};
         if (!wb.Workbook.WBView) wb.Workbook.WBView = [];

@@ -2,13 +2,11 @@
 
 namespace app\zx_fuzhu\controller;
 
-use think\Controller;
-use think\Request;
 use think\Db;
 use think\Cache;
 use app\zx_fuzhu\model\Infotables;
 use app\zx_fuzhu\model\Vlantables;
-use Overtrue\Pinyin\Pinyin;
+
 
 class Index extends Common
 {

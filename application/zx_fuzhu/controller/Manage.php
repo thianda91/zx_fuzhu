@@ -2,12 +2,10 @@
 
 namespace app\zx_fuzhu\controller;
 
-use think\Controller;
 use think\Db;
 use app\zx_fuzhu\model\Vlantables;
 use app\zx_fuzhu\model\Infotables;
 use app\zx_fuzhu\model\Iptables;
-use Overtrue\Pinyin\Pinyin;
 
 class Manage extends Index
 {
@@ -186,7 +184,7 @@ class Manage extends Index
 		$db = Infotables::field($field)->find(input("post.id"));
 		$values = array_values($db->toArray());
 		// $title = '[ip已分配]-' . $db->bandWidth . "M-" . $db->cName;
-		$title = config('idc_title_city') . 'IDC.ISP-' . $db->ip . "-" . $db->cName;
+		$title = config('idc.title_city') . 'IDC.ISP-' . $db->ip . "-" . $db->cName;
 		$contact = config('idc_contact');
 		$contact_str = implode(',', $contact);
 		$body = "";
@@ -265,14 +263,14 @@ class Manage extends Index
 	}
 
 	/**
-	 * get:加载数据到handsontable并验证,
-	 * post:上传,后台处理入库
-	 * 1.默认post为新申请,移除ip、vlan信息再保存,
+	 * get: 加载数据到 handsontable 并验证,
+	 * post: 上传,后台处理入库
+	 * 1. 默认 post 为新申请,移除 ip、vlan 信息再保存,
 	 * 严格验证，不合规不许提交，标记status：0
-	 * 2.带post参数type=import,视为旧信息导入,
-	 * 生成ip表（全）和vlan表信息（不全）。直接入库，并标记tags:导入
-	 * 3.为了新增字段不修改数据库，将新增字段用json保存到一列。
-	 * 在csv_to_array时，需要获取额外的字段
+	 * 2. 带 post 参数 type=import,视为旧信息导入,
+	 * 生成 ip 表（全）和 vlan 表信息（不全）。直接入库，并标记 tags: 导入
+	 * 3. 为了新增字段不修改数据库，将新增字段用 json 保存到一列。
+	 * 在 csv_to_array 时，需要获取额外的字段
 	 *
 	 * @return void|string|mixed|string
 	 */

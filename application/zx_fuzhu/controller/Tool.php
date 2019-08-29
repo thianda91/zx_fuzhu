@@ -6,11 +6,6 @@ class Tool extends Common
 {
 	public function _initialize()
 	{
-		if (input("get.uu") == "y") {
-			session("user", [
-				"name" => "{Test}"
-			]);
-		}
 		parent::_initialize();
 	}
 	public function index()

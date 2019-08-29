@@ -9,9 +9,9 @@ use Overtrue\Pinyin\Pinyin;
 
 class Generator extends Common
 {
-/* 各系统的【单位属性】默认固定为“企业” */
-/* 应该根据字段 unitProperty 来填写 */
-/* 应删除字段 unitAttribute，或在 apply.html 中隐藏该字段，已精简页面显示 */
+	/* 各系统的【单位属性】默认固定为“企业” */
+	/* 应该根据字段 unitProperty 来填写 */
+	/* 应删除字段 unitAttribute，或在 apply.html 中隐藏该字段，已精简页面显示 */
 	public static function generateIDCinfoFiles($ids = null, $type = 2)
 	{
 		if (!is_array($ids)) {
@@ -23,8 +23,8 @@ class Generator extends Common
 			2 => ["表4", "表5", "表8", "表10", "表11"]
 		];
 		$colNames = "A B C D E F G H I J K L M N O P Q R S T U V W X Y Z";
-		$theCompany = base64_decode("5Lit5Zu956e75Yqo6YCa5L+h6ZuG5Zui6L695a6B5pyJ6ZmQ5YWs5Y+4");
-		$engineRoom = base64_decode("6L695a6B56e75Yqo6ZOB5bKt5biCSURD5LiT57q/5py65oi/");
+		$theCompany = config('idc.theCompany');
+		$engineRoom = config('idc.engineRoom');
 		$structure = [
 			"表4" => [
 				"title" => "IP地址段信息",
@@ -136,7 +136,7 @@ class Generator extends Common
 		//return $cellValues;
 		$spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
 		$index = 1;
-        // 编辑worksheet
+		// 编辑 worksheet
 		foreach ($cellValues as $ws => $_sheet) {
 			$worksheet = new \PhpOffice\PhpSpreadsheet\Worksheet\Worksheet($spreadsheet, $ws);
 			$spreadsheet->addSheet($worksheet, $index++);
@@ -146,15 +146,15 @@ class Generator extends Common
 			}
 		}
 		$spreadsheet->removeSheetByIndex(0);
-		$spreadsheet->getProperties()->setCreator("X.Da");
-		$spreadsheet->getProperties()->setLastModifiedBy('X.Da');
+		$spreadsheet->getProperties()->setCreator(config('copyright'));
+		$spreadsheet->getProperties()->setLastModifiedBy(config('copyright'));
 		$writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($spreadsheet, "Xlsx");
 		// header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'); // 告诉浏览器数据excel07文件
 		// header('Content-Disposition: attachment;filename="' . $fileName . '"'); // 告诉浏览器将输出文件的名称
 		// header('Cache-Control: max-age=0'); // 禁止缓存
 		// $writer->save("php://output");
 		$dir = "../runtime/temp/";
-		$fileName = '铁岭IDC.ISP-' . $data["ip"] . "-" . $data["cName"] . '.xlsx';
+		$fileName = config('idc.title_city') . 'IDC.ISP-' . $data["ip"] . "-" . $data["cName"] . '.xlsx';
 		// $tmp = time(). '.xlsx';
 		// $writer->save($dir . $tmp);
 		$writer->save($dir . $fileName);
@@ -175,22 +175,25 @@ class Generator extends Common
 		}
 		$row = 5;
 		$cellValues = [];
-		$principal = base64_decode("5Y2c546J");
-		$tel = base64_decode("MTg4NDEwNTA4MTU=") + 0;
-		$dept = base64_decode("5a6i5oi35ZON5bqU5Lit5b+D");
-		$email = base64_decode("YnV5dS50bEBsbi5jaGluYW1vYmlsZS5jb20");
-		$engineRoom = base64_decode("6ZOB5bKt5p+05rKz6KGX5bGAMeWPt+alvDLlsYIyMTDnu7zlkIjmnLrmiL8");
+		$cityName = config('idc.title_city');
+		$parentNetwork = config('zg.parentNetwork');
+		$deviceName = config('zg.deviceName');
+		$principal = config('zg.principal');
+		$tel = config('zg.tel') + 0;
+		$dept = config('zg.dept');
+		$email = config('zg.email');
+		$engineRoom = config('zg.engineRoom');
 		$default = [
-			"B" => "铁岭",
+			"B" => $cityName,
 			"D" => "占用",
-			"E" => "223.100.96.0/20",
+			"E" => $parentNetwork,
 			"F" => "集客专线",
 			"G" => "互联网专线",
-			"H" => "LNTIL-MA-CMNET-BAS02-YZME60X",
+			"H" => $deviceName,
 			"L" => $principal,
 			"M" => $tel,
-			"N" => "Auto import! --X.Da",
-			"O" => "铁岭",
+			"N" => "Auto imported!",
+			"O" => $cityName,
 			"P" => $principal,
 			"R" => "其他",
 			//"S" => "企业",
@@ -210,7 +213,7 @@ class Generator extends Common
 			$cellValues["K" . $row] = $data["create_time"]; // 分配时间
 			$cellValues["Q" . $row] = $data["cName"]; // 客户名
 			$cellValues["S" . $row] = $data["extra"]["unitAttribute"]; // 企业属性
-            /* 以下为选填 */
+			/* 以下为选填 */
 			$cellValues["I" . $row] = $data["cPerson"]; // 客户联系人
 			$cellValues["J" . $row] = $data["cPhone"] + 0; // 客户电话
 			$cellValues["U" . $row] = $data["cAddress"]; // 客户地址
@@ -316,14 +319,14 @@ class Generator extends Common
 		}
 		$spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($pFilename);
 		$worksheet = $spreadsheet->getSheet($workSheetIndex);
-        // 编辑worksheet
+		// 编辑worksheet
 		foreach ($cellValues as $d => $v) {
 			$worksheet->$writerMethod($d, $v);
-            // $worksheet->getCell ( $d )->setValue ( $v );
+			// $worksheet->getCell ( $d )->setValue ( $v );
 		}
-        // 定义spreadsheet参数并输出到浏览器
-		$spreadsheet->getProperties()->setCreator("X.Da");
-		$spreadsheet->getProperties()->setLastModifiedBy('X.Da');
+		// 定义spreadsheet参数并输出到浏览器
+		$spreadsheet->getProperties()->setCreator(config('copyright'));
+		$spreadsheet->getProperties()->setLastModifiedBy(config('copyright'));
 		$writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($spreadsheet, $writerType);
 		if ($writerType == "Xls") {
 			header('Content-Type: application/vnd.ms-excel'); // 告诉浏览器将要输出excel03文件
@@ -453,7 +456,7 @@ class Generator extends Common
 		$script .= "\n traffic-policy remarkdscp inbound";
 		$script .= "\n statistic enable";
 		$script .= "\nip route-static vpn-instance tlwsw " . long2ip($ip[2]) . " " . long2ip($ip[1]) . " " . long2ip($ipB[2] + 2) . "\r\n";
-        /* the9312 */
+		/* the9312 */
 		if ($data["neFactory"]) {
 			$data["neFactory"] === '华为' && $down = "port_hw";
 			$data["neFactory"] === '中兴' && $down = "port_zte";

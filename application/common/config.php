@@ -1,4 +1,4 @@
 <?php
 return [ 
-		'version' => "V1.0426.common",
+		'version' => "V20190829.common",
 ];

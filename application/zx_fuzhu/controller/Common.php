@@ -4,7 +4,7 @@ namespace app\zx_fuzhu\controller;
 
 use app\common\controller\Common as CCommon;
 use think\Session;
-use app\zx_fuzhu\model\Infotables;
+use think\Config;
 
 class Common extends CCommon
 {
@@ -16,6 +16,7 @@ class Common extends CCommon
 	{
 		parent::_initialize();
 		$this->assign("title", config('webTitle'));
+		Config::load('static/personalized_config.php');
 	}
 	/**
 	 * 退出登录
@@ -37,10 +38,5 @@ class Common extends CCommon
 		else {
 			return $this->error("页面不在了哦~你猜我给它弄到哪去了？→_→", null, null, 30);
 		}
-	}
-	public function tt()
-	{
-		$data = null;
-		return dump($data);
 	}
 }
