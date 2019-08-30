@@ -110,7 +110,19 @@ class Manage extends Index
 						break;
 					}
 				}
+				$logKey = "分配IP";
 				if ($ifChanged) {
+					$logValue = [
+						"status" => "success",
+						"name" => session("user.name"),
+						"email" => session("user.email"),
+						"msg" => "操作成功",
+						"Infoid" => $data["id"],
+						"cName" => $data["cName"],
+						"ip" => $data["ip"],
+						"vlan" => $data["vlan"],
+					];
+					$this->log($logKey, $logValue);
 					// 为以下操作约定 return 值：$msg 表示 提示信息（区分是ip问题还是vlan问题），$data 表示具体数据（如重复的客户名） 
 					$this->checkInstanceID($info, $data);
 					$data = $this->checkAndSetIp($info, $data);
@@ -120,9 +132,17 @@ class Manage extends Index
 					if (isset($data["vlan"]) && ($info->status == 0 || $info->status == 4)) {
 						Infotables::where("id", $data["id"])->setInc("status");
 					}
-					return $this->result($this->refleshTodoList(), 1, "操作成功。<br>是否发送邮件通知给申请人？");
+					return $this->result($this->refleshTodoList(), 1, "操作成功。<br>是否发送邮件通知给客户经理？");
 				} else {
-					return $this->result(null, 2, "本次提交无修改");
+					$msg = "本次提交无修改";
+					$logValue = [
+						"status" => "failed",
+						"name" => session("user.name"),
+						"email" => session("user.email"),
+						"msg" => $msg,
+					];
+					$this->log($logKey, $logValue);
+					return $this->result(null, 2, $msg);
 				}
 			}
 		}
@@ -130,7 +150,6 @@ class Manage extends Index
 
 	public function generateVlan()
 	{
-		$aStation = "";
 		$aStationConf = config("aStation");
 		if (array_key_exists(input("get.d"), $aStationConf)) {
 			$device = $aStationConf[input("get.d")];
@@ -168,29 +187,28 @@ class Manage extends Index
 	}
 
 	/**
-	 * 发邮件告知申请已处理，并发送 IDC 备案信息给厂家联系人
+	 * 提醒客户经理发送 IDC 备案信息给厂家联系人
+	 *
+	 * @return void
 	 */
-	public function sendResultEmail()
+	public function sendBeiAnNotice()
 	{
 		if (request()->isGet() || !input("?post.id")) {
 			return $this->result("Wrong Req", 0);
 		}
 		$address = []; // 忽略送来的参数，从数据库获取
 		$order = "1,2,3,6,4,5,9,10,15,17,23,19";
-		// instanceId,zxType,bandWidth,cName,vlan,ip,ipB,mEmail,aEmail
+		// instanceId,zxType,bandWidth,cName,neFactory,aStation,vlan,ip,mPerson,mEmail,aEmail,ifOnu
 		$field = $this->getHeader("zx_apply-new-rb", $order, true);
 		$items = explode(",", $this->getHeader("zx_apply-new-rb", $order));
-		array_pop($items);
+		array_pop($items); // 去掉 ifOnu
 		$db = Infotables::field($field)->find(input("post.id"));
 		$values = array_values($db->toArray());
-		// $title = '[ip已分配]-' . $db->bandWidth . "M-" . $db->cName;
-		$title = config('idc.title_city') . 'IDC.ISP-' . $db->ip . "-" . $db->cName;
+		$title = '[ip已分配]请填写IDC/ISP备案信息-' . $db->cName . "-" . $db->ip;
+		// $title = config('idc.title_city') . 'IDC.ISP-' . $db->ip . "-" . $db->cName;
 		$contact = config('idc_contact');
 		$contact_str = implode(',', $contact);
-		$body = "";
-		$body .= "<p style='color:#000;background-color:#ccc;font-size:12px;'>备案信息由客户经理<span style='color:blue'>" . $db->mPerson . "(" .  $db->mEmail;
-		$body .= ")</span>负责填写，并确保其完整性、准确性。<br>本邮件由辅助平台自动发送给厂家联系人：" . $contact_str . "，并抄送给 IP 分配的管理员。</p>";
-		$body .= "如备案信息有误，请厂家联系人联系客户经理。由客户经理负责登陆辅助平台进行更正重新提交，或直接回复给厂家联系人。";
+		$body = '<p>请客户经理及时填写 IDC/ISP 备案信息：</p>' . $this->todo_link_str('index/idc_isp');
 		$body .= "<br><table style='border-collapse:collapse;border:none;'>";
 		for ($i = 0; $i < count($items); $i++) {
 			$body .= "<tr>";
@@ -198,7 +216,9 @@ class Manage extends Index
 			$body .= "</tr>";
 		}
 		$body .= "</table>";
-		$address['Addr1'] = $contact;
+		$body .= "<p style='color:#000;background-color:#ccc;font-size:12px;'>请<span style='color:blue'>客户经理</span>尽快完成备案信息的填写，并确保其完整性、准确性。";
+		$body .= "<br>在辅助平台提交后会自动发送给厂家联系人：" . $contact_str . "，并自动抄送给 城域网 IP 管理员。</p>";
+		$body .= "如备案信息有误，在收到邮件后，登陆辅助平台进行更正，重新提交。";
 		$address['CCm'] = $db->mEmail;
 		$address['CCa'] = $db->aEmail;
 		if ($db->ifOnu) {
@@ -208,6 +228,54 @@ class Manage extends Index
 			}
 		} else {
 			$address['CCu'] = session("user.email");
+		}
+		$result = $this->sendEmail($address, $title, $body);
+		return $this->result($result, is_bool($result) ? 1 : 0);
+	}
+
+	/**
+	 * 发送 IDC 备案信息给厂家联系人
+	 */
+	public function sendBeiAnResultEmail()
+	{
+		if (request()->isGet() || !input("?post.id")) {
+			return $this->result("Wrong Req for sendBeiAnResultEmail", 0);
+		}
+		$order = "1,6,10,15,17,23,28,19";
+		// instanceId,cName,ip,mPerson,mEmail,aEmail,extra,ifOnu
+		$field = $this->getHeader("zx_apply-new-rb", $order, true);
+		$items = explode(",", $this->getHeader("zx_apply-new-rb", $order));
+		array_pop($items); // 去掉 ifOnu
+		$db = Infotables::field($field)->find(input("post.id"));
+		// 转换 extra 信息
+		$extraHeader = config("extraInfo");
+		foreach ($extraHeader as $k => $v) {
+			if (array_key_exists($v, $db["extra"])) {
+				$db[$v] = $db["extra"][$v];
+				array_push($items,$k);
+			}
+			unset($db["extra"]);
+		}
+		$values = array_values($db->toArray());
+		$title = config('idc.title_city') . 'IDC.ISP-' . $db->ip . "-" . $db->cName;
+		$contact = config('idc_contact');
+		$contact_str = implode(',', $contact);
+		$body = "";
+		$body .= "<br><table style='border-collapse:collapse;border:none;'>";
+		for ($i = 0; $i < count($items); $i++) {
+			$body .= "<tr>";
+			$body .= "<th style='width:200px;border:solid #666 1px;'>" . $items[$i] . "</th><td style='width:500px;border:solid #666 1px;'>" . $values[$i] . "</td>";
+			$body .= "</tr>";
+		}
+		$body .= "</table>";
+		$body .= "<p style='color:#000;background-color:#ccc;font-size:12px;'>备案信息由客户经理<span style='color:blue'>" . $db->mPerson . "(" . $db->mEmail;
+		$body .= ")</span>负责填写，并确保其完整性、准确性。<br>本邮件由辅助平台自动发送给厂家联系人：" . $contact_str . "，并抄送给 IP 分配的管理员。</p>";
+		$body .= "如备案信息有误，请厂家联系人联系客户经理。由客户经理负责登陆辅助平台进行更正重新提交，或直接回复给厂家联系人。";
+		$address = $contact;
+		$address['CCm'] = $db->mEmail;
+		$CCs = config("manageEmails");
+		foreach ($CCs as $k => $v) {
+			$address['CC' . $k] = $v . "@ln.chinamobile.com";
 		}
 		$attachment = Generator::generateIDCinfoFiles(input("post.id"));
 		$result = $this->sendEmail($address, $title, $body, $attachment);

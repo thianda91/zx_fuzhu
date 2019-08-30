@@ -1,4 +1,4 @@
-{extend name="common@Public/base" /} {block name="leftmenu"} {include file="Common/leftmenu_zx_apply_manage" /}
+{extend name="common@public/base" /} {block name="leftmenu"} {include file="common/leftmenu_zx_apply_manage" /}
 {/block}
 {block name="head"}
 <style id="thisStyle">
@@ -107,10 +107,11 @@
 			if (typeof _formAjax != "undefined") {
 				form_init(data0);
 			} else {
-				$.get("../Common/_formStructure.html", function (data1) {
+				$.get("../common/_formStructure.html", function (data1) {
 					$("body").after(data1);
+					formStructure = formStructure.concat(beianStructure);
 					formStructure[4].list.unshift(buttons);
-					$.get("../Common/_formConfig.html", function (data2) {
+					$.get("../common/_formConfig.html", function (data2) {
 						$("body").append(data2);
 						window._formAjax = 1;
 						form_init(data0);
@@ -170,7 +171,7 @@
 						if (typeof calculateUsedVlans == 'function') {
 							showUsedVlans(d);
 						} else {
-							$.get("../Common/_calculateUsedVlans.html", function (data) {
+							$.get("../common/_calculateUsedVlans.html", function (data) {
 								$("body").append(data);
 								showUsedVlans(d);
 							});
@@ -243,7 +244,7 @@
 				title: "&nbsp;",
 				text: data.msg,
 				callback: function (result) {
-					result && sendResultEmail();
+					result && sendBeiAnNotice();
 					myList.clearAll();
 					data.data && myList.parse(data.data, "json");
 					$("#form_container").html("");
@@ -259,7 +260,7 @@
 						return;
 					}
 					if (data.code == 1) {
-						result && sendResultEmail();
+						result && sendBeiAnNotice();
 						myList.clearAll();
 						data.data && myList.parse(data.data, "json");
 						$("#form_container").html("");
@@ -331,10 +332,10 @@
 		dhxWins.window("_vlans").setText(text);
 		dhxWins.window("_vlans").attachHTMLString(str);
 	}
-	/* 发送 [ip已分配] 邮件 */
-	function sendResultEmail() {
+	/* 发送 [ip已分配] 请进行 IDC/ISP 备案的邮件 */
+	function sendBeiAnNotice() {
 		var data = JSON.parse(sessionStorage.getItem("emailData"));
-		$.post("sendResultEmail.html", data, function (d) {
+		$.post("sendBeiAnNotice.html", data, function (d) {
 			if (d.code) {
 				dhtmlx.message("邮件发送成功<br>" + JSON.parse(sessionStorage.getItem("emailData")).mEmail + ", " + JSON.parse(
 					sessionStorage.getItem("emailData")).aEmail);

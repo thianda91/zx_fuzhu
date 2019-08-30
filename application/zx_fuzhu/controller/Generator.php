@@ -505,13 +505,4 @@ class Generator extends Common
 		}
 		return dump("ok");
 	}
-
-	private function cacheSettings()
-	{
-		$client = new \Redis();
-		$client->connect('127.0.0.1', 6379);
-		$pool = new \Cache\Adapter\Redis\RedisCachePool($client);
-		$simpleCache = new \Cache\Bridge\SimpleCache\SimpleCacheBridge($pool);
-		\PhpOffice\PhpSpreadsheet\Settings::setCache($simpleCache);
-	}
 }

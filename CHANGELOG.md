@@ -1,5 +1,15 @@
 ## 更新日志
 
+### v0.8.11(2019-08-30)
+
+继续调整代码，与旧仓库分支 `v0.9.0_preview` 合并。待验证。
+
+**todo**
+
+-  `Manage.php->sendBeiAnNotice()` 函数待验证。
+- `@todo`部分待开发。
+- `ipbeian.html` 页面待开发，`Index.php->ipbeian()`函数待开发。
+- 更新 3 个系统导出模板。
 
 ### v0.8.10(2019-08-29)
 
@@ -49,6 +59,7 @@ manage/query.html
 
 - **`todo.html`分配 IP、vlan 提交后，完美实现自动生成 idc.isp 模板数据，并做为邮件附件发送**
 - 优化 idc.isp 邮件的正文内容（`Manage.php=>sendResultEmail()`）
+    > 已修改为`Manage.php=>sendBeiAnResultEmail()`
 - 优化`todo.html`页面提交时，冲突/错误的处理逻辑及显示
 
 **TODO**

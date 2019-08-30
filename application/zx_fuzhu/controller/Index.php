@@ -78,7 +78,7 @@ class Index extends Common
 		}
 	}
 
-	protected function writeLog($k, $status, $msg)
+	protected function writeLog($k = '', $status = '', $msg = '')
 	{
 		$this->log($k, [
 			"status" => $status,
@@ -98,11 +98,12 @@ class Index extends Common
 		} else if (request()->isPost()) {
 			$data = input("post.");
 			$this->checkInstanceID(null, $data["instanceId"]); // 检查instanceId
-			$extraHeader = config("extraInfo");
-			foreach ($extraHeader as $k => $v) {
-				$data["extra"][$v] = $data[$v];
-				unset($data[$v]);
-			}
+			// 工程申请时不再填写idc/isp备案信息，下面的转换不再需要。
+			// $extraHeader = config("extraInfo");
+			// foreach ($extraHeader as $k => $v) {
+			// 	$data["extra"][$v] = $data[$v];
+			// 	unset($data[$v]);
+			// }
 			$result = Infotables::createInfo($data, "apply");
 			// 发邮件通知
 			$subject = "[待办]ip申请-" . ($data["ifOnu"] ? "onu" : "9312") . "-" . $data["cName"] . $data["instanceId"];
@@ -115,6 +116,9 @@ class Index extends Common
 				"instanceId" => $data["instanceId"]
 			];
 			$this->log("提交申请", $v);
+			/**
+			 * @todo 提醒客户经理填写 IP 备案信息
+			 */
 			$redirectUrl = "../" . session("user.role") . "/query.html";
 			return $this->result(null, $result, $redirectUrl);
 			// return json_encode ( $data, 256 );
@@ -155,9 +159,10 @@ class Index extends Common
 			if ($k = 'extra') {
 				continue;
 			}
-			if ($v != $oldValue) {
-				$change .= $k . " => [" . $oldValue . "] 改为 [" . $v . "]\r\n";
-				$updates[$k] = "[" . $oldValue . "]=>[" . $v . "]";
+			// last change from v0.7.17
+			if ($v != $oldData[$k]) {
+				$change .= $k . ' => [' . $oldData[$k] . '] 改为 [' . $v . "]\r\n";
+				$updates[$k] = '[' . $oldData[$k] . ']=>[' . $v . ']';
 			}
 		}
 		$change == '' && $change = "无";
@@ -175,6 +180,18 @@ class Index extends Common
 		$this->log("修改申请", $v);
 		$redirectUrl = "../" . session("user.role") . "/query.html";
 		return $this->result(null, $result, $redirectUrl);
+	}
+
+	/**
+	 * IP 备案信息填写
+	 *
+	 * @return void
+	 */
+	public function ipbeian()
+	{
+		if (request()->isGet()) {
+			return $this->fetch();
+		}
 	}
 
 	/**
@@ -300,11 +317,11 @@ class Index extends Common
 		}
 		$field = "create_time,instanceId,cName,cAddress,vlan,ip,aPerson,aEmail";
 		$result = collection(Infotables::where("zxType", $data["zxType"])->where($data["where"][0], "like", "%" . $data["where"][2] . "%")->field($field)->order("ip desc")->select())->toArray();
-		$v = $data;
-		$v["resultLen"] = count($result);
-		$v["user"] = session("user.name");
-		$v["url"] = request()->url(true);
-		$this->log("基本信息查询", $v);
+		$logValue  = $data;
+		$logValue["resultLen"] = count($result);
+		$logValue["user"] = session("user.name");
+		$logValue["url"] = request()->url(true);
+		$this->log("基本信息查询", $logValue);
 		if (Cache::get('querySearchBriefTimes')) {
 			Cache::inc('querySearchBriefTimes');
 		} else {
@@ -317,10 +334,10 @@ class Index extends Common
 				$address[$k] = $v . "@ln.chinamobile.com";
 			}
 			if ($querySearchBriefTimes > 14) {
-				session(null);
 				$msg = session("user.name") . "已被系统强制登出，原因：查询频繁，单位时间内累计" . $querySearchBriefTimes . "次";
 				$this->log("强制登出", $msg);
 				$this->noticeManage("[频繁查询]" . session("user.name") . "-10分钟内：" . $querySearchBriefTimes, null, $address);
+				session(null);
 				return $this->error("已退出登陆，请勿频繁查询！", "index");
 			}
 			return $querySearchBriefTimes;
@@ -356,6 +373,13 @@ class Index extends Common
 			}
 			$infotables = null;
 		}
+		$logValue = [
+			"sqlResult" => $result,
+			"name" => session("user.name"),
+			"email" => session("user.email"),
+			"updateData" => $updateData,
+		];
+		$this->log("台账更新", $logValue);
 		return $this->result($dbNew, 1, $result);
 	}
 
@@ -373,6 +397,13 @@ class Index extends Common
 		foreach ($input["id"] as $id) {
 			Vlantables::destroy(["infoId" => $id]);
 		}
+		$logValue = [
+			"sqlResult" => $result,
+			"name" => session("user.name"),
+			"email" => session("user.email"),
+			"deleteData" => $input,
+		];
+		$this->log("台账更新", $logValue);
 		return $result;
 	}
 	/**
@@ -393,19 +424,19 @@ class Index extends Common
 		$result = Infotables::createInfo($data, "apply");
 		// 发邮件通知
 		$subject = "[待办]额外申请-" . $data["aPerson"] . "-" . $data["cName"];
-		$oldInfo = "<pre>A端基站： " . $data["aStation"] . "\r\nip: " . $data["ip"] . "\r\nvlan: " . $data["vlan"] . "</pre>";
+		$oldInfo = "<pre>A端基站： " . $data["aStation"] . "\r\nip: " . long2ip($data["ip"]) . "\r\nvlan: " . $data["vlan"] . "</pre>";
 		$body = "<p>原分配信息：</p>" . $oldInfo;
 		$body .= "<p>现申请额外的IP，需要您核实。";
 		$body .= $this->todo_link_str();
 		$this->sendManageNotice($subject, $body);
-		$v = [
+		$logValue = [
 			"username" => session("user.name"),
 			"email" => session("user.email"),
 			"cName" => $data["cName"],
 			"instanceId" => $data["instanceId"],
 			"oldInfo" => $oldInfo
 		];
-		$this->log("额外申请", $v);
+		$this->log("额外申请", $logValue);
 		$redirectUrl = "../" . session("user.role") . "/query.html";
 		return $this->result(null, $result, $redirectUrl);
 	}
@@ -439,13 +470,13 @@ class Index extends Common
 		} else {
 			$data = collection(Infotables::field($field)->where("aPerson", session("user.name"))->order("ip")->select())->toArray();
 		}
-		$v = [
+		$logValue = [
 			"dataNum" => count($data),
 			"zxType" => $zxType,
 			"username" => session("user.name"),
 			"email" => session("user.email")
 		];
-		$this->log("导出全量数据", $v);
+		$this->log("导出全量数据", $logValue);
 		return [
 			"data" => $data,
 			"colHeader" => $colHeader,
@@ -478,7 +509,7 @@ class Index extends Common
 	}
 
 	/**
-	 * 给管理员发送通知
+	 * 给管理员发送通知, 可选：抄送给当前用户
 	 *
 	 * @param string $subject
 	 * @param string $body
@@ -494,8 +525,13 @@ class Index extends Common
 		$this->sendEmail($address, $subject, $body);
 	}
 
-	private function todo_link_str()
+	/**
+	 * 生成发送代办邮件时的访问链接
+	 *
+	 * @param string $hash
+	 */
+	private function todo_link_str($hash = 'manage/todo')
 	{
-		return "<p>请登陆系统及时处理：</p><br> 内网： <a href='http://" . config('address_local') . "/" . config('moduleName') . "/index/index.html#Manage/todo'>http://" . config('address_local') . "/" . config('moduleName') . "/index/index.html#Manage/todo</a><br>外网： <a href='http://" . config('address_wide') . "/" . config('moduleName') . "/index/index.html#Manage/todo'>http://" . config('address_wide') . "/" . config('moduleName') . "/index/index.html#Manage/todo</a>";
+		return "<p>请登陆系统及时处理：</p><br> 内网： <a href='http://" . config('address_local') . "/" . config('moduleName') . "/index/index.html#" . $hash . "'>http://" . config('address_local') . "/" . config('moduleName') . "/index/index.html#" . $hash . "</a><br>外网： <a href='http://" . config('address_wide') . "/" . config('moduleName') . "/index/index.html#" . $hash . "'>http://" . config('address_wide') . "/" . config('moduleName') . "/index/index.html#" . $hash . "</a>";
 	}
 }

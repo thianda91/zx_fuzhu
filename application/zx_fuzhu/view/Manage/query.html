@@ -1,6 +1,6 @@
-{extend name="common@Public/base" /} {block name="head"}
+{extend name="common@public/base" /} {block name="head"}
 <link rel="STYLESHEET" type="text/css" href="__STATIC__/handsontable-pro/handsontable.full.min.css">
-<script src="__STATIC__/handsontable-pro/handsontable.full.min.js"></script> {/block} {block name="leftmenu"} {include file="Common/leftmenu_zx_apply_manage" /} {/block} {block name="main"}
+<script src="__STATIC__/handsontable-pro/handsontable.full.min.js"></script> {/block} {block name="leftmenu"} {include file="common/leftmenu_zx_apply_manage" /} {/block} {block name="main"}
 <div class="htmltitle">
     <span class="h2" style="margin-right: 50px">信息查询</span>
     <span>请选择类别：</span>
@@ -881,6 +881,7 @@
         } else {
             $.get("../Common/_formStructure.html", function(data1) {
                 $("body").after(data1);
+                formStructure = formStructure.concat(beianStructure);
                 $.get("../Common/_formConfig.html", function(data2) {
                     $("body").append(data2);
                     window._formAjax = 1;

@@ -13,10 +13,10 @@ return [
     // +----------------------------------------------------------------------
     // | 应用设置
     // +----------------------------------------------------------------------
-	'copyright' => 'X.Da',
-	'contact' => '1748104738@139.com',
-	'domain_name' => 'https://nextflow.icu/',
-	'github_repo' => 'thianda91/zx_fuzhu',
+    'copyright' => 'X.Da',
+    'contact' => '1748104738@139.com',
+    'domain_name' => 'https://nextflow.icu/',
+    'github_repo' => 'thianda91/zx_fuzhu',
     // 应用调试模式
     'app_debug'              => false,
     // 应用Trace
@@ -166,7 +166,7 @@ return [
     // 异常处理handle类 留空使用 \think\exception\Handle
     'exception_handle'       => '',
     'http_exception_template' => [
-        404 =>  APP_PATH.'404.html',
+        404 =>  APP_PATH . '404.html',
     ],
 
     // +----------------------------------------------------------------------

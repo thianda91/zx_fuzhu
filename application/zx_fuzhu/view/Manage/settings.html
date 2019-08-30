@@ -1,4 +1,4 @@
-{extend name="common@Public/base" /} {block name="leftmenu"}
+{extend name="common@public/base" /} {block name="leftmenu"}
 <ul id="leftMenu" class="nav nav-stacked nav-pills">
 	<li>
 		<a href="{$Think.session.settings_back_url}">
@@ -73,7 +73,7 @@
 	];
 	var myForm = new dhtmlXForm("updateLastIP", updateLastIP_formStructure);
 	myForm.enableLiveValidation(true);
-</script> {include file="Common/_formConfig" /}
+</script> {include file="common/_formConfig" /}
 <script>
 	myForm.reloadOptions("zxType", config["default"]["zxType"]);
 	myForm.setItemValue("lastIpStr", "{$lastIp|default=''}");
@@ -99,7 +99,7 @@
 			if (typeof calculateUsedVlans == 'function') {
 				showVlanBatch(data.usedVlans);
 			} else {
-				$.get("../Common/_calculateUsedVlans.html", function (data2) {
+				$.get("../common/_calculateUsedVlans.html", function (data2) {
 					$("body").append(data2);
 					showVlanBatch(data.usedVlans);
 				});

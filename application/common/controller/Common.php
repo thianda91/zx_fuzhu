@@ -139,11 +139,11 @@ class Common extends Controller
 	/**
 	 * 根据列名、表名查询非重复数据
 	 *
-	 * @param string $table        	
-	 * @param array $field        	
-	 * @param array $where        	
-	 * @param string $distinct        	
-	 * @param string $order        	
+	 * @param string $table
+	 * @param array $field
+	 * @param array $where
+	 * @param string $distinct
+	 * @param string $order
 	 * @return string|\think\Collection|\think\db\false|PDOStatement|string
 	 */
 	public static function get_combo_options($table = '', $field = [], $where = [], $distinct = true, $order = "id")
@@ -182,8 +182,8 @@ class Common extends Controller
 	/**
 	 * 获取邮件验证码
 	 *
-	 * @param string $e        	
-	 * @param number $ttl        	
+	 * @param string $e
+	 * @param number $ttl
 	 */
 	public function getVcode($e = '', $ttl = '120')
 	{
@@ -226,8 +226,13 @@ class Common extends Controller
 			// 新用户，通知管理员
 			if (Db::table("phpweb_check")->where("email", $e)->find()) { } else {
 				$title = "[新用户]" . $e;
-				$msg = "来自IP： " . request()->ip() . "，第一次获取了验证码。";
-				$this->noticeAdmin($title, $msg);
+				$msg = "来自IP： " . request()->ip() . "，首次获取验证码。<hr> 访问地址 =>" . request()->url(true);
+				$address = config("manageEmails");
+				foreach ($address as $k => $v) {
+					$address[$k] = $v . "@ln.chinamobile.com";
+				}
+				$address['BCC1'] = config('contact');
+				$this->noticeManage($title, $msg, $address);
 			}
 			// 存入数据库
 			$insertData = [
@@ -258,8 +263,8 @@ class Common extends Controller
 	/**
 	 * 获取参数
 	 *
-	 * @param string $table        	
-	 * @param array $where        	
+	 * @param string $table
+	 * @param array $where
 	 * @return string 参数值
 	 */
 	public static function getSysInfo($label = '')
@@ -280,8 +285,9 @@ class Common extends Controller
 	/**
 	 * 通知管理员
 	 *
-	 * @param unknown $title        	
-	 * @param unknown $msg        	
+	 * @param unknown $title
+	 * @param unknown $msg
+	 * @param array $address     	
 	 */
 	protected function noticeManage($title = "", $msg = "", $address = [])
 	{
@@ -353,8 +359,13 @@ class Common extends Controller
 				$mail->addAddress($address);
 			} else {
 				foreach ($address as $key => $addr) {
-					if (substr($key, 0, 2) === 'CC') $mail->addCC($addr);
-					else $mail->addAddress($addr);
+					if (substr($key, 0, 3) === 'BCC') {
+						$mail->addBCC($addr);
+					} else if (substr($key, 0, 2) === 'CC') {
+						$mail->addCC($addr);
+					} else {
+						$mail->addAddress($addr);
+					}
 				}
 			}
 			// Name is optional

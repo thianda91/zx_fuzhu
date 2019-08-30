@@ -1,0 +1,19 @@
+{extend name="common@public/base" /} {block name="leftmenu"} {include file="common/leftmenu_zx_apply_index" /} {/block}
+{block
+name="head"}
+<style>
+    #form_container {
+        width: 900px;
+    }
+</style>
+{/block}{block name="main"}
+<div class="htmltitle">
+    <span class="h2" style="margin-right:50px">IP 备案信息填写</span>
+</div>
+<div id="form_container">
+
+
+</div>
+{/block} {block name="script"} {include file="Common/_formStructure" /} {include file="Common/_formConfig" /}
+
+{/block} 

@@ -38,4 +38,4 @@ v0.15.1-2019-08-20
 下列文件涉敏，不再版本控制中保存：
 
 - `sampleData/` 里需要保存导出的 excel 模板。
-- `email_config` 为发件箱配置。
+- `personalized_config.php` 为个性化配置。

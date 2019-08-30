@@ -16,7 +16,7 @@ var formStructure = [
 		{type:"input",name:"cNeeds",label:"客户需求",maxLength:150,rows:3},
 		{type:"input",name:"mPerson",label:"客户经理姓名",maxLength:5,required:true},
 		{type:"input",name:"mPhone",label:"客户经理电话",maxLength:12,required:true},
-		{type:"input",name:"mEmail",label:"客户经理邮箱",validate:"^[a-z_-]+.tl@ln.chinamobile.com$",note:{text:"必须包含 .tl@ln.chinamobile.com"},required:true},
+		{type:"input",name:"mEmail",label:"客户经理邮箱",validate:"^[a-z-_.]+@ln.chinamobile.com$",note:{text:"必须包含 .tl@ln.chinamobile.com"},required:true},
 		{type:"input",name:"marks",label:"备注"},
 	]},
 	{type:"block",name:"btn",inputWidth:"auto",offsetLeft:30,list:[
@@ -27,6 +27,8 @@ var formStructure = [
 		{type:"newcolumn"},
 		{type:"button",name:"test",value:"测试数据",offsetLeft:0,hidden:true},
 	]},
+];
+var beianStructure = [
 	{type:"newcolumn",name:"newcol1",offset:10},
 	{type:"fieldset",name:"ip_bak",label:"IP 备案附加信息",width:450,list:[
 		{type:"settings",labelWidth:100,inputWidth:300},
