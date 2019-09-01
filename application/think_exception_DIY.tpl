@@ -444,7 +444,7 @@
     <?php } ?>
 	
     <div class="copyright">
-        {$Think.config.copyright}.
+        <?php echo config('copyright'); ?>.
     </div>
 	
 	<?php } ?>

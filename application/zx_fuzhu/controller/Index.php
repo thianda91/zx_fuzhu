@@ -192,6 +192,29 @@ class Index extends Common
 		if (request()->isGet()) {
 			return $this->fetch();
 		}
+		if (request()->isPost()) {
+			if (input("param.r") == "get_cnames") {
+				$result = Infotables::where('mEmail', session('user.email'))->where('status', '<', 2)->column('id,cName');
+				return $result;
+			}
+			if (input('param.r') == "") {
+				$data = input('post.');
+				$extraHeader = config("extraInfo");
+				foreach ($extraHeader as $k => $v) {
+					$data["extra"][$v] = $data[$v];
+					unset($data[$v]);
+				}
+			}
+			$infotables = new Infotables();
+			$extraHeader = config("extraInfo");
+			foreach ($extraHeader as $e => $exH) {
+				if (isset($v[$exH])) { // extra 部分有更新，需要先获取完整的
+					$v["extra"][$exH] = $v[$exH];
+					unset($v[$exH]);
+				}
+			}
+			$result += $infotables->isUpdate(true)->allowField(true)->save($v, ["id" => $data['cName']]);
+		}
 	}
 
 	/**

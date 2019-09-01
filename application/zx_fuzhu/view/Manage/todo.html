@@ -110,7 +110,7 @@
 				$.get("../common/_formStructure.html", function (data1) {
 					$("body").after(data1);
 					formStructure = formStructure.concat(beianStructure);
-					formStructure[4].list.unshift(buttons);
+					formStructure[3].list.unshift(buttons);
 					$.get("../common/_formConfig.html", function (data2) {
 						$("body").append(data2);
 						window._formAjax = 1;

@@ -1,14 +1,14 @@
 ## 更新日志
 
-### v0.8.11(2019-08-30)
+### v0.8.13(2019-09-02)
 
 继续调整代码，与旧仓库分支 `v0.9.0_preview` 合并。待验证。
 
 **todo**
 
--  `Manage.php->sendBeiAnNotice()` 函数待验证。
-- `@todo`部分待开发。
-- `ipbeian.html` 页面待开发，`Index.php->ipbeian()`函数待开发。
+- `Manage.php->sendBeiAnNotice()` 函数待验证。
+- `Index.php`中`@todo`部分待开发。
+- `Index.php->ipbeian()`函数待验证。
 - 更新 3 个系统导出模板。
 
 ### v0.8.10(2019-08-29)

@@ -31,6 +31,8 @@
 				{ type: "input", name: "mPhone", label: "客户经理电话", maxLength: 12, required: true },
 				{ type: "input", name: "mEmail", label: "客户经理邮箱", validate: "^[a-z-_.]+@ln.chinamobile.com$", note: { text: "必须包含 @ln.chinamobile.com" }, required: true },
 				{ type: "input", name: "marks", label: "备注" },
+				{ type: "input", name: "aPerson", label: "申请人", value: "{$Think.session.user.name}", readonly: true, hidden: true },
+				{ type: "input", name: "aEmail", label: "申请人邮箱", value: "{$Think.session.user.email}", readonly: true, hidden: true },
 			]
 		},
 	];
@@ -39,9 +41,6 @@
 		{
 			type: "fieldset", name: "ip_bak", label: "IP 备案附加信息", width: 450, list: [
 				{ type: "settings", labelWidth: 100, inputWidth: 300 },
-				{ type: "combo", name: "cName", label: "客户名称", maxLength: 30, required: true },
-				{ type: "input", name: "aPerson", label: "申请人", value: "{$Think.session.user.name}", readonly: true, hidden: true },
-				{ type: "input", name: "aEmail", label: "申请人邮箱", value: "{$Think.session.user.email}", readonly: true, hidden: true },
 				{ type: "input", name: "cPerson", label: "客户联系人姓名", maxLength: 5, required: true },
 				{ type: "input", name: "cPhone", label: "客户联系人电话", maxLength: 12, required: true },
 				{ type: "input", name: "cEmail", label: "客户联系人邮箱", validate: "ValidEmail", required: true },

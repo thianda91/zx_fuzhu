@@ -18,6 +18,19 @@
     beianStructure.push(btnStructure);
     var myForm = new dhtmlXForm("form_container", beianStructure);
     myForm.enableLiveValidation(true);
+    // 添加 客户名称
+    var c_name_struct = formStructure[1].list[6];
+    c_name_struct['type'] = 'combo';
+    myForm.addItem('ip_bak', c_name_struct, 0, 0);
+    $.post("", { "r": "get_cnames" }, function (data) {
+        config['cname_check'] = data; // 提交前校验用
+        for (var i in data) {
+            myForm.getCombo('cName').addOption(i, data[i]);
+        }
+    });
+    myForm.setValidation('cName', function (data) {
+        return data in config['cname_check'] ;
+    });
     initCombo();
     myForm.attachEvent("onChange", onChangeHandler);
     myForm.attachEvent("onButtonClick", function (id) {
@@ -28,7 +41,7 @@
                     dhtmlx.alert("已自动去除<b class='text-danger'>" + num + "</b>个字段中的空格，请核对后再次提交。<br>下次请注意不要录入空格，谢谢。");
                     return;
                 }
-                var myData = myForm.getFormData();
+                // var myData = myForm.getFormData();
                 for (var i in myData) {
                     if (typeof (myData[i]) != "undefined") {
                         // 去空格
@@ -57,5 +70,27 @@
                 });
             }
         }
+        if (id == "test") {
+            myForm.setFormData({
+                instanceId: "91001234567",
+                cPerson: "cPersion",
+                cPhone: 1,
+                cEmail: "1@1.com",
+                unitProperty: 5,
+                unitCategory: 13,
+                industryCategory: 3,
+                credential: 2,
+                credentialnum: "112345zzz6789",
+                county: 211202,
+                zipCode: 112000,
+                appServType: 4,
+                securityPerson: "cPersion",
+                securityPersonID: "123456199912120123",
+                securityPhone: 11,
+                securityEmail: "11@1.com",
+            });
+        }
     });
+
+    //myForm.getCombo('cName').attachEvent('onFocus');
 </script> {/block}
