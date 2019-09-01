@@ -1,63 +1,72 @@
 <script>
-var formStructure = [
-	{type:"settings",labelWidth:100,inputWidth:200,offsetLeft:0},
-	{type:"fieldset",label:"专线基本信息",name:"basic",width:350,offsetLeft:0,list:[
-		{type:"input",name:"instanceId",label:"产品实例标识",validate:"^[0-9]{11}$",required:true},
-		{type:"select",name:"zxType",label:"专线类别",required:true,note:{text:'目前仅支持互联网业务'}},
-		{type:"select",name:"neFactory",label:"网元厂家",validate:"^[^3]+$",required:true},
-		{type:"checkbox",name:"ifOnu",label:"onu 带的业务",labelWidth:80,labelAlign:"right",position:"label-right",list:[
-			{type:"settings",labelWidth:80},
-	        {type:"input",name:"oltName",label:"olt 名称"/*,note:{text:"如果下拉菜单搜不到请直接输入。"},*/,hidden:true},
-	    ],hidden:true},
-		{type:"combo",name:"aStation",label:"A 端基站",required:true},
-		{type:"input",name:"bandWidth",label:"带宽(M)",value:"",validate:"^[0-9Mm]+$",required:true},
-		{type:"input",name:"cName",label:"客户名称",maxLength:30,required:true},
-		{type:"input",name:"cAddress",label:"客户地址",required:true},
-		{type:"input",name:"cNeeds",label:"客户需求",maxLength:150,rows:3},
-		{type:"input",name:"mPerson",label:"客户经理姓名",maxLength:5,required:true},
-		{type:"input",name:"mPhone",label:"客户经理电话",maxLength:12,required:true},
-		{type:"input",name:"mEmail",label:"客户经理邮箱",validate:"^[a-z-_.]+@ln.chinamobile.com$",note:{text:"必须包含 .tl@ln.chinamobile.com"},required:true},
-		{type:"input",name:"marks",label:"备注"},
-	]},
-	{type:"block",name:"btn",inputWidth:"auto",offsetLeft:30,list:[
-		{type:"newcolumn"},
-		{type:"button",name:"commit",value:"提交",offsetLeft:30},
-		{type:"newcolumn"},
-		{type:"button",name:"cancel",value:"重置",offsetLeft:30},
-		{type:"newcolumn"},
-		{type:"button",name:"test",value:"测试数据",offsetLeft:0,hidden:true},
-	]},
-];
-var beianStructure = [
-	{type:"newcolumn",name:"newcol1",offset:10},
-	{type:"fieldset",name:"ip_bak",label:"IP 备案附加信息",width:450,list:[
-		{type:"settings",labelWidth:100,inputWidth:300},
-		{type:"input",name:"aPerson",label:"申请人",value:"{$Think.session.user.name}",readonly:true,hidden:true},
-		{type:"input",name:"aEmail",label:"申请人邮箱",value:"{$Think.session.user.email}",readonly:true,hidden:true},
-		{type:"input",name:"cPerson",label:"客户联系人姓名",maxLength:5,required:true},
-		{type:"input",name:"cPhone",label:"客户联系人电话",maxLength:12,required:true},
-		{type:"input",name:"cEmail",label:"客户联系人邮箱",validate:"ValidEmail",required:true},
-		{type:"combo",name:"unitProperty",label:"单位性质",required:true},
-		{type:"combo",name:"unitCategory",label:"单位分类",required:true},
-		{type:"combo",name:"industryCategory",label:"行业分类",required:true},
-		{type:"combo",name:"credential",label:"单位证件类型",required:true},
-		{type:"input",name:"credentialnum",label:"单位证件号",required:true},
-		{type:"combo",name:"province",label:"所在省",required:true},
-		{type:"combo",name:"city",label:"所在市",required:true},
-		{type:"combo",name:"county",label:"所在县区",required:true},
-		{type:"input",name:"zipCode",label:"邮政编码",required:true},
-		{type:"combo",name:"appServType",label:"应用服务类型",required:true},
-		{type:"select",name:"unitAttribute",label:"单位属性",required:true},
-		{type:"input",name:"securityPerson",label:"网络安全责任人",maxLength:5,required:true},
-		{type:"input",name:"securityPersonID",label:"责任人身份证号",required:true},
-		{type:"input",name:"securityPhone",label:"责任人电话",maxLength:12,required:true},
-		{type:"input",name:"securityEmail",label:"责任人邮箱",validate:"ValidEmail",required:true},
-	]},
-];
-var onuTip = "ONU的业务申请时无需选择A端基站,可选填OLT名称";
-var ipStructure = {type:"input",label:"互联ip",name:"ip",validate:"ipstr",required:true};
-var	vlanStructure = {type:"input",label:"vlan",name:"vlan"/*,validate:"^[2-3][0-9]{3}$",required:true*/};
-var buttons = {type:"button",name:"auto_pre",value:"自动预分配"};
+	var btnStructure = {
+		type: "block", name: "btn", inputWidth: "auto", offsetLeft: 30, list: [
+			{ type: "newcolumn" },
+			{ type: "button", name: "commit", value: "提交", offsetLeft: 30 },
+			{ type: "newcolumn" },
+			{ type: "button", name: "cancel", value: "重置", offsetLeft: 30 },
+			{ type: "newcolumn" },
+			{ type: "button", name: "test", value: "测试数据", offsetLeft: 0, hidden: true },
+		]
+	};
+	var formStructure = [
+		{ type: "settings", labelWidth: 100, inputWidth: 200, offsetLeft: 0 },
+		{
+			type: "fieldset", label: "专线基本信息", name: "basic", width: 350, offsetLeft: 0, list: [
+				{ type: "input", name: "instanceId", label: "产品实例标识", validate: "^[0-9]{11}$", required: true },
+				{ type: "select", name: "zxType", label: "专线类别", required: true, note: { text: '目前仅支持互联网业务' } },
+				{ type: "select", name: "neFactory", label: "网元厂家", validate: "^[^3]+$", required: true },
+				{
+					type: "checkbox", name: "ifOnu", label: "onu 带的业务", labelWidth: 80, labelAlign: "right", position: "label-right", list: [
+						{ type: "settings", labelWidth: 80 },
+						{ type: "input", name: "oltName", label: "olt 名称"/*,note:{text:"如果下拉菜单搜不到请直接输入。"},*/, hidden: true },
+					], hidden: true
+				},
+				{ type: "combo", name: "aStation", label: "A 端基站", required: true },
+				{ type: "input", name: "bandWidth", label: "带宽(M)", value: "", validate: "^[0-9Mm]+$", required: true },
+				{ type: "input", name: "cName", label: "客户名称", maxLength: 30, required: true },
+				{ type: "input", name: "cAddress", label: "客户地址", required: true },
+				{ type: "input", name: "cNeeds", label: "客户需求", maxLength: 150, rows: 3 },
+				{ type: "input", name: "mPerson", label: "客户经理姓名", maxLength: 5, required: true },
+				{ type: "input", name: "mPhone", label: "客户经理电话", maxLength: 12, required: true },
+				{ type: "input", name: "mEmail", label: "客户经理邮箱", validate: "^[a-z-_.]+@ln.chinamobile.com$", note: { text: "必须包含 @ln.chinamobile.com" }, required: true },
+				{ type: "input", name: "marks", label: "备注" },
+			]
+		},
+	];
+	var beianStructure = [
+		{ type: "newcolumn", name: "newcol1", offset: 10 },
+		{
+			type: "fieldset", name: "ip_bak", label: "IP 备案附加信息", width: 450, list: [
+				{ type: "settings", labelWidth: 100, inputWidth: 300 },
+				{ type: "combo", name: "cName", label: "客户名称", maxLength: 30, required: true },
+				{ type: "input", name: "aPerson", label: "申请人", value: "{$Think.session.user.name}", readonly: true, hidden: true },
+				{ type: "input", name: "aEmail", label: "申请人邮箱", value: "{$Think.session.user.email}", readonly: true, hidden: true },
+				{ type: "input", name: "cPerson", label: "客户联系人姓名", maxLength: 5, required: true },
+				{ type: "input", name: "cPhone", label: "客户联系人电话", maxLength: 12, required: true },
+				{ type: "input", name: "cEmail", label: "客户联系人邮箱", validate: "ValidEmail", required: true },
+				{ type: "combo", name: "unitProperty", label: "单位性质", required: true },
+				{ type: "combo", name: "unitCategory", label: "单位分类", required: true },
+				{ type: "combo", name: "industryCategory", label: "行业分类", required: true },
+				{ type: "combo", name: "credential", label: "单位证件类型", required: true },
+				{ type: "input", name: "credentialnum", label: "单位证件号", required: true },
+				{ type: "combo", name: "province", label: "所在省", required: true },
+				{ type: "combo", name: "city", label: "所在市", required: true },
+				{ type: "combo", name: "county", label: "所在县区", required: true },
+				{ type: "input", name: "zipCode", label: "邮政编码", required: true },
+				{ type: "combo", name: "appServType", label: "应用服务类型", required: true },
+				{ type: "select", name: "unitAttribute", label: "单位属性", required: true },
+				{ type: "input", name: "securityPerson", label: "网络安全责任人", maxLength: 5, required: true },
+				{ type: "input", name: "securityPersonID", label: "责任人身份证号", required: true },
+				{ type: "input", name: "securityPhone", label: "责任人电话", maxLength: 12, required: true },
+				{ type: "input", name: "securityEmail", label: "责任人邮箱", validate: "ValidEmail", required: true },
+			]
+		},
+	];
+	var onuTip = "ONU的业务申请时无需选择A端基站,可选填OLT名称";
+	var ipStructure = { type: "input", label: "互联ip", name: "ip", validate: "ipstr", required: true };
+	var vlanStructure = { type: "input", label: "vlan", name: "vlan"/*,validate:"^[2-3][0-9]{3}$",required:true*/ };
+	var buttons = { type: "button", name: "auto_pre", value: "自动预分配" };
 	/* 初始化combo */
 	function initCombo() {
 		var combo;
@@ -71,15 +80,20 @@ var buttons = {type:"button",name:"auto_pre",value:"自动预分配"};
 				continue;
 			}
 			combo.clearAll();
+			var currOpt = config["muticolumn"][cfg_m];
+			var w = 210;
+			// if (currOpt[0]['text']['MC'].indexOf('、')) {
+			// 	w = 220;
+			// }
 			combo.setTemplate({
 				input: "#id#-#MC#",
 				//header:false,//if you want to hide header
 				columns: [
 					{ header: "id", width: 60, option: "#id#" },
-					{ header: "MC", width: 200, option: "#MC#" }
+					{ header: "MC", width: w, option: "#MC#" }
 				]
 			});
-			combo.addOption(config["muticolumn"][cfg_m]);
+			combo.addOption(currOpt);
 			combo.enableFilteringMode("between");
 		}
 	}
@@ -137,6 +151,27 @@ var buttons = {type:"button",name:"auto_pre",value:"自动预分配"};
 		}
 		if (name == 'unitProperty') {
 			myForm.setItemValue('unitAttribute', myForm.getCombo('unitProperty').getComboText().substr(2));
+			// 若 单位性质 变化，使用单位证件类型 枚举值跟着变
+			var combo = myForm.getCombo('credential');
+			combo.setComboText("");
+			combo.setComboValue("");
+			combo.clearAll();
+			combo.setTemplate({
+				input: "#id#-#MC#",
+				//header:false,//if you want to hide header
+				columns: [
+					{ header: "id", width: 60, option: "#id#" },
+					{ header: "MC", width: 200, option: "#MC#" }
+				]
+			});
+			var credentialOpt = config["muticolumn"]['credential'];
+			var currOpt = [];
+			for (var i in credentialOpt) {
+				if (credentialOpt[i]['text']['p'] == value) {
+					currOpt.push(credentialOpt[i]);
+				}
+			}
+			combo.addOption(currOpt);
 		}
 		if (['cPerson', 'cPhone', 'cEmail'].indexOf(name) != -1) {
 			// 智能 填安全责任人为客户联系人
@@ -172,7 +207,7 @@ var buttons = {type:"button",name:"auto_pre",value:"自动预分配"};
 		return c && !!(c[1] <= 255 && c[2] <= 255 && c[3] <= 255 && c[4] <= 255) && b || false;
 	}
 	/* 修补新增的额外数据 */
-	function fixExtraFields(){
+	function fixExtraFields() {
 		if (myForm.getItemValue("neFactory") == "ONU") {
 			myForm.showItem("oltName");
 			if (/index\/query/.test(location.href.toLowerCase())) {
@@ -186,10 +221,10 @@ var buttons = {type:"button",name:"auto_pre",value:"自动预分配"};
 				});
 			}
 		}
-		if(myForm.getItemValue('unitAttribute') == '') {
+		if (myForm.getItemValue('unitAttribute') == '') {
 			myForm.setItemValue('unitAttribute', myForm.getCombo('unitProperty').getComboText().substr(2));
 		}
-		['cPerson', 'cPhone', 'cEmail'].map(function(name){
+		['cPerson', 'cPhone', 'cEmail'].map(function (name) {
 			var _key = 'security' + name.substr(1);
 			myForm.getItemValue(_key) == '' && myForm.setItemValue(_key, myForm.getItemValue(name));
 		});

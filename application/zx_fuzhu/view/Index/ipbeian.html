@@ -1,6 +1,5 @@
-{extend name="common@public/base" /} {block name="leftmenu"} {include file="common/leftmenu_zx_apply_index" /} {/block}
-{block
-name="head"}
+{extend name="common@public/base" /}{block name="leftmenu"}{include file="common/leftmenu_zx_apply_index" /}{/block}
+{block name="head"}
 <style>
     #form_container {
         width: 900px;
@@ -14,6 +13,49 @@ name="head"}
 
 
 </div>
-{/block} {block name="script"} {include file="Common/_formStructure" /} {include file="Common/_formConfig" /}
-
-{/block} 
+{/block} {block name="script"} {include file="Common/_formStructure" /} {include file="common/_formConfig" /}
+<script>
+    beianStructure.push(btnStructure);
+    var myForm = new dhtmlXForm("form_container", beianStructure);
+    myForm.enableLiveValidation(true);
+    initCombo();
+    myForm.attachEvent("onChange", onChangeHandler);
+    myForm.attachEvent("onButtonClick", function (id) {
+        if (id == "commit") {
+            if (myForm.validate()) {
+                var num = removeSpace();
+                if (num > 0) {
+                    dhtmlx.alert("已自动去除<b class='text-danger'>" + num + "</b>个字段中的空格，请核对后再次提交。<br>下次请注意不要录入空格，谢谢。");
+                    return;
+                }
+                var myData = myForm.getFormData();
+                for (var i in myData) {
+                    if (typeof (myData[i]) != "undefined") {
+                        // 去空格
+                        myData[i] = String(myData[i]).replace(/ /g, "");
+                    }
+                }
+                $.post("", myData, function (data) {
+                    data.code == 1 && dhtmlx.alert({
+                        title: "&nbsp;",
+                        text: "提交成功。",
+                        callback: function () {
+                            location.href = data.msg;
+                        },
+                    });
+                    data.code == 0 && dhtmlx.alert({
+                        type: "alert-error",
+                        title: data.msg,
+                        text: data.data
+                    });
+                });
+            } else {
+                dhtmlx.alert({
+                    type: "alert-error",
+                    title: "数据验证有误",
+                    text: "请检查填写是否完整或格式类型是否正确。"
+                });
+            }
+        }
+    });
+</script> {/block}

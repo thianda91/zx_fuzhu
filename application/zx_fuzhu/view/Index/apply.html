@@ -1,5 +1,5 @@
-{extend name="common@public/base" /} {block name="leftmenu"} {include file="common/leftmenu_zx_apply_index" /} {/block} {block
-name="head"}
+{extend name="common@public/base" /}{block name="leftmenu"}{include file="common/leftmenu_zx_apply_index"/}{/block}
+{block name="head"}
 <style>
 	#form_container {
 		width: 900px;
@@ -15,6 +15,7 @@ name="head"}
 </div>
 {/block} {block name="script"} {include file="common/_formStructure" /} {include file="common/_formConfig" /}
 <script>
+	formStructure.push(btnStructure);
 	var myForm = new dhtmlXForm("form_container", formStructure);
 	myForm.enableLiveValidation(true);
 	initCombo();
