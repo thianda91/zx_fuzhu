@@ -3,6 +3,7 @@
 namespace app\zx_fuzhu\controller;
 
 use app\common\controller\Common as CCommon;
+use app\zx_fuzhu\model\Infotables;
 use think\Session;
 use think\Config;
 

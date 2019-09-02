@@ -354,7 +354,7 @@ class Common extends Controller
 			$mail->Password = config("email.password"); // SMTP password
 			$mail->SMTPSecure = 'ssl'; // Enable TLS encryption, `ssl` also accepted
 			$mail->Port = $account['Port']; // TCP port to connect to
-			$mail->setFrom($myAddress, config("email.username"));
+			$mail->setFrom($myAddress, config("email.nickname"));
 			if (is_string($address)) {
 				$mail->addAddress($address);
 			} else {

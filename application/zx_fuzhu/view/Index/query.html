@@ -620,6 +620,7 @@
 			} else {
 				$.get("../common/_formStructure.html", function (data1) {
 					$("body").after(data1);
+					formStructure.push(btnStructure);
 					formStructure = formStructure.concat(beianStructure);
 					$.get("../common/_formConfig.html", function (data2) {
 						$("body").append(data2);

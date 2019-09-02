@@ -105,10 +105,21 @@ class Index extends Common
 			// 	unset($data[$v]);
 			// }
 			$result = Infotables::createInfo($data, "apply");
-			// 发邮件通知
-			$subject = "[待办]ip申请-" . ($data["ifOnu"] ? "onu" : "9312") . "-" . $data["cName"] . $data["instanceId"];
-			$body = $this->todo_link_str();
-			$this->sendManageNotice($subject, $body, true);
+			// 发邮件通知 给客户经理，抄送 IP 地址管理员、当前申请人
+			// $subject = "[待办]ip申请-" . ($data["ifOnu"] ? "onu" : "9312") . "-" . $data["cName"] . $data["instanceId"];
+			$subject = "[待办]互联网专线申请-" . $data["cName"];
+			$body = "<b>尊敬的客户经理，" . $data['mPerson'] . "：</b>" . $this->todo_link_str('index/todo') . "<hr>";
+			$body .= "<b>IP地址管理员：</b>" . $this->todo_link_str('index/todo') . "<hr>";
+			$body .= "<small style='color:#666;'>本邮件通知 给客户经理，抄送 IP 地址管理员、当前申请人</small>";
+				$address = [
+					0 => data['mEmail'],
+				];
+			$manageEmails = config("manageEmails");
+			foreach ($manageEmails as $k => $v) {
+				$address["CC" . $k] = $v . "@ln.chinamobile.com";
+			}
+			$address["CCu"] = session("user.email");
+			$this->sendEmail($data['mEmail'], $subject, $body);
 			$v = [
 				"username" => session("user.name"),
 				"email" => session("user.email"),
@@ -116,9 +127,6 @@ class Index extends Common
 				"instanceId" => $data["instanceId"]
 			];
 			$this->log("提交申请", $v);
-			/**
-			 * @todo 提醒客户经理填写 IP 备案信息
-			 */
 			$redirectUrl = "../" . session("user.role") . "/query.html";
 			return $this->result(null, $result, $redirectUrl);
 			// return json_encode ( $data, 256 );
@@ -442,6 +450,8 @@ class Index extends Common
 		$id = $input["copyOne"];
 		/* 不验证实例标识重复与否 */
 		$data = Infotables::get($id)->getData();
+		// json str 转 object
+		$data['extra'] = json_decode($data['extra']);
 		// 获取原始数据，去除 id，直接保存
 		unset($data["id"]);
 		$result = Infotables::createInfo($data, "apply");
