@@ -40,4 +40,9 @@ class Common extends CCommon
 			return $this->error("页面不在了哦~你猜我给它弄到哪去了？→_→", null, null, 30);
 		}
 	}
+	public function tt() {
+		$a=['a'];
+		$a['CC']='123c';
+		dump($a);
+	}
 }

@@ -22,14 +22,14 @@
     var c_name_struct = formStructure[1].list[6];
     c_name_struct['type'] = 'combo';
     myForm.addItem('ip_bak', c_name_struct, 0, 0);
-    $.post("", { "r": "get_cnames" }, function (data) {
+    $.post("", { _method: "PUT", r: "get_cnames" }, function (data) {
         config['cname_check'] = data; // 提交前校验用
         for (var i in data) {
             myForm.getCombo('cName').addOption(i, data[i]);
         }
     });
     myForm.setValidation('cName', function (data) {
-        return data in config['cname_check'] ;
+        return data in config['cname_check'];
     });
     initCombo();
     myForm.attachEvent("onChange", onChangeHandler);

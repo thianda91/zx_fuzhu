@@ -9,14 +9,19 @@ use Overtrue\Pinyin\Pinyin;
 
 class Generator extends Common
 {
-	/* 各系统的【单位属性】默认固定为“企业” */
-	/* 应该根据字段 unitProperty 来填写 */
-	/* 应删除字段 unitAttribute，或在 apply.html 中隐藏该字段，已精简页面显示 */
+	/**
+	 * 生成 idc 备案模板
+	 *
+	 * @param string|array $ids 
+	 * @param integer $type 类型决定 sheets 表样，目前仅包含 type2
+	 * @return void
+	 */
 	public static function generateIDCinfoFiles($ids = null, $type = 2)
 	{
 		if (!is_array($ids)) {
 			$ids = explode(",", $ids);
 		}
+		$header_row = 2;
 		$row = 3;
 		$cellValues = [];
 		$sheets = [
@@ -74,14 +79,22 @@ class Generator extends Common
 			$keys = explode(" ", $colNames);
 			$values = explode(",", $structure[$sheet]["header"]);
 			foreach ($values as $k => $v) {
-				$header[$keys[$k] . 2] = $v;
+				$header[$keys[$k] . $header_row] = $v; // $header['A2'] = '起始IP地址'
 			}
+			/* set headers */
 			$cellValues[$sheet] = array_merge(["A1" => $structure[$sheet]["title"]], $header);
 			/* add default values */
 			foreach ($structure[$sheet]["default"] as $k => $v) {
 				$cellValues[$sheet][$k . $row] = $v;
 			}
 		}
+		/**
+		 * 内置函数
+		 *
+		 * @param array $arr
+		 * @param string $k
+		 * @return void
+		 */
 		function getArrayValue($arr = [], $k = "0")
 		{
 			return array_key_exists($k, $arr) ? $arr[$k] : null;
@@ -135,11 +148,11 @@ class Generator extends Common
 		}
 		//return $cellValues;
 		$spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
-		$index = 1;
+		$sheet_index = 1;
 		// 编辑 worksheet
 		foreach ($cellValues as $ws => $_sheet) {
 			$worksheet = new \PhpOffice\PhpSpreadsheet\Worksheet\Worksheet($spreadsheet, $ws);
-			$spreadsheet->addSheet($worksheet, $index++);
+			$spreadsheet->addSheet($worksheet, $sheet_index++);
 			foreach ($_sheet as $k => $v) {
 				$worksheet->setCellValue($k, $v);
 				// $worksheet->getCell ( $k )->setValue ( $v );
@@ -218,6 +231,7 @@ class Generator extends Common
 			$cellValues["J" . $row] = $data["cPhone"] + 0; // 客户电话
 			$cellValues["U" . $row] = $data["cAddress"]; // 客户地址
 			$cellValues["V" . $row] = $data["cEmail"]; // 客户邮箱
+			$cellValues["AE" . $row] = $data["extra"]["credentialnum"]; // 经营许可证编号
 			$cellValues["AG" . $row] = $data["instanceId"] + 0; // 政企专线计费代号
 			$row++;
 		}
@@ -229,10 +243,10 @@ class Generator extends Common
 	{
 		$row = 4;
 		$cellValues = [];
-		$dept = base64_decode("6ZOB5bKt56e75Yqo5a6i5oi35ZON5bqU5Lit5b+D");
-		$principal = base64_decode("5Y2c546J");
-		$tel = base64_decode("MTg4NDEwNTA4MTU=") + 0;
-		$email = base64_decode("YnV5dS50bEBsbi5jaGluYW1vYmlsZS5jb20");
+		$dept = config('zg.dept');
+		$principal = config('zg.principal');
+		$tel = config('zg.tel') + 0;
+		$email = config('zg.email');
 		$default = [
 			"D" => "其他",
 			//"F" => "企业",
@@ -268,7 +282,7 @@ class Generator extends Common
 
 	public static function generateGxbIp($ids = null)
 	{
-		$row = 2;
+		$row = 3;
 		$cellValues = [];
 		$default = [
 			"D" => "其他",
@@ -280,18 +294,40 @@ class Generator extends Common
 				$cellValues[$k . $row] = $v;
 			}
 			$data = Infotables::get($id)->toArray();
-			$cellValues["A" . $row] = $data["ip"]; // ip
-			$cellValues["B" . $row] = $data["ip"]; // ip
-			$cellValues["C" . $row] = $data["cName"]; // 客户名
-			$cellValues["F" . $row] = $data["extra"]["unitAttribute"]; // 企业属性
+			$cellValues["B" . $row] = 1; // ip 类型
+			$cellValues["C" . $row] = $data["ip"]; // ip
+			$cellValues["D" . $row] = $data["ip"]; // ip
+			$cellValues["E" . $row] = 1; // 使用方式
+			$cellValues["F" . $row] = $data["create_time"]; // 分配时间
+			$cellValues["G" . $row] = $data["cName"]; // 客户名
+			$cellValues["H" . $row] = $data["extra"]["unitProperty"]; // 单位性质
+			$cellValues["I" . $row] = $data["extra"]["unitCategory"]; // 单位分类
+			$cellValues["J" . $row] = $data["extra"]["industryCategory"]; // 行业分类
+			$cellValues["K" . $row] = $data["extra"]["credential"]; // 使用单位证件类型
+			$cellValues["L" . $row] = $data["extra"]["credentialnum"]; // 使用单位证件号码
+			$cellValues["M" . $row] = $data["extra"]["province"]; // 单位所在省
+			$cellValues["N" . $row] = $data["extra"]["city"]; // 单位所在市
+			$cellValues["O" . $row] = $data["extra"]["county"]; // 单位所在县
+			$cellValues["P" . $row] = $data["cAddress"]; // 详细地址
+			$cellValues["Q" . $row] = $data["cPerson"]; // 联系人姓名
 			$cellValues["L" . $row] = $data["cAddress"]; // 客户地址
-			$cellValues["M" . $row] = $data["cPerson"]; // 客户联系人
-			$cellValues["N" . $row] = $data["cPhone"] + 0; // 客户电话
-			$cellValues["O" . $row] = $data["cEmail"]; // 客户邮箱
-			$cellValues["R" . $row] = $data["create_time"]; // 分配时间
-			$cellValues["F" . $row] = "企业";
-			$cellValues["G" . $row] = isset($data["extra"]["province"]) ? $data["extra"]["province"] : "";
-			$cellValues["H" . $row] = isset($data["extra"]["city"]) ? $data["extra"]["city"] : "";
+			$cellValues["R" . $row] = $data["cPhone"] + 0; // 客户电话
+			$cellValues["S" . $row] = $data["cEmail"]; // 客户邮箱
+			$cellValues["T" . $row] = 1; // 网关IP地址类型
+			$cellValues["U" . $row] = substr($data["ip"], 0, strripos($data["ip"], ".") + 1); // 网关IP地址
+			$cellValues["V" . $row] = $data["extra"]["province"]; // 网关所在省
+			$cellValues["W" . $row] = $data["extra"]["city"]; // 网关所在市
+			$cellValues["X" . $row] = $data["extra"]["county"]; // 网关所在县
+			$cellValues["Y" . $row] = config('gxb.gateway_address'); // 网关地址
+			$cellValues["Z" . $row] = 1; // 使用区域
+			$cellValues["AB" . $row] = 1; // IP地址类型
+			$cellValues["AC" . $row] = $data["ip"]; // ip
+			$cellValues["AD" . $row] = $data["ip"]; // ip
+			$cellValues["AE" . $row] = $data["extra"]["province"]; // IP所在省
+			$cellValues["AF" . $row] = $data["extra"]["city"]; // IP所在市
+			$cellValues["AG" . $row] = $data["extra"]["county"]; // IP所在县
+			$cellValues["AH" . $row] = $data["cAddress"]; // IP详细地址
+			$cellValues["AI" . $row] = $data["extra"]["appServType"]; // 应用服务类型
 			$row++;
 		}
 		$pFilename = './static/sampleData/ip_gxb.xls';

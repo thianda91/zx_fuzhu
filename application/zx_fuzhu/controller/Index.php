@@ -106,20 +106,9 @@ class Index extends Common
 			// }
 			$result = Infotables::createInfo($data, "apply");
 			// 发邮件通知 给客户经理，抄送 IP 地址管理员、当前申请人
-			// $subject = "[待办]ip申请-" . ($data["ifOnu"] ? "onu" : "9312") . "-" . $data["cName"] . $data["instanceId"];
-			$subject = "[待办]互联网专线申请-" . $data["cName"];
-			$body = "<b>尊敬的客户经理，" . $data['mPerson'] . "：</b>" . $this->todo_link_str('index/todo') . "<hr>";
-			$body .= "<b>IP地址管理员：</b>" . $this->todo_link_str('index/todo') . "<hr>";
-			$body .= "<small style='color:#666;'>本邮件通知 给客户经理，抄送 IP 地址管理员、当前申请人</small>";
-				$address = [
-					0 => data['mEmail'],
-				];
-			$manageEmails = config("manageEmails");
-			foreach ($manageEmails as $k => $v) {
-				$address["CC" . $k] = $v . "@ln.chinamobile.com";
-			}
-			$address["CCu"] = session("user.email");
-			$this->sendEmail($data['mEmail'], $subject, $body);
+			$subject = "[待办]ip申请-" . ($data["ifOnu"] ? "onu" : "9312") . "-" . $data["cName"] . $data["instanceId"];
+			$body = $this->todo_link_str();
+			$this->sendManageNotice($subject, $body, true);
 			$v = [
 				"username" => session("user.name"),
 				"email" => session("user.email"),
@@ -129,7 +118,6 @@ class Index extends Common
 			$this->log("提交申请", $v);
 			$redirectUrl = "../" . session("user.role") . "/query.html";
 			return $this->result(null, $result, $redirectUrl);
-			// return json_encode ( $data, 256 );
 		}
 	}
 
@@ -201,17 +189,15 @@ class Index extends Common
 			return $this->fetch();
 		}
 		if (request()->isPost()) {
-			if (input("param.r") == "get_cnames") {
-				$result = Infotables::where('mEmail', session('user.email'))->where('status', '<', 2)->column('id,cName');
-				return $result;
+			if (!input("?post.id")) {
+				return $this->result("没有传参", 0);;
 			}
-			if (input('param.r') == "") {
-				$data = input('post.');
-				$extraHeader = config("extraInfo");
-				foreach ($extraHeader as $k => $v) {
-					$data["extra"][$v] = $data[$v];
-					unset($data[$v]);
-				}
+			// 提交时更新 Infotables，并发送idc备案邮件
+			$data = input('post.');
+			$extraHeader = config("extraInfo");
+			foreach ($extraHeader as $k => $v) {
+				$data["extra"][$v] = $data[$v];
+				unset($data[$v]);
 			}
 			$infotables = new Infotables();
 			$extraHeader = config("extraInfo");
@@ -221,8 +207,70 @@ class Index extends Common
 					unset($v[$exH]);
 				}
 			}
-			$result += $infotables->isUpdate(true)->allowField(true)->save($v, ["id" => $data['cName']]);
+			$result = $infotables->isUpdate(true)->allowField(true)->save($v, ["id" => $data['cName']]);
+			// 自动发IDC备案信息给厂家
+			$this->sendBeiAnResultEmail(input("post.id"));
+
+			$address = config('idc_contact');
+			$subject =
+				$attachment = Generator::generateIDCinfoFiles(input("post.id"));
+			$result = $this->sendEmail($address, $subject, $body);
+			// 抄送 IP 地址管理员，申请人、客户经理
+			$subject = "[待办]ip申请-" . ($data["ifOnu"] ? "onu" : "9312") . "-" . $data["cName"] . $data["instanceId"];
+			$body = $this->todo_link_str();
+			$this->sendManageNotice($subject, $body, true);
 		}
+		if (request()->isPut()) {
+			if (input("param.r") == "get_cnames") {
+				$result = Infotables::where('mEmail', session('user.email'))->where('status', '<', 2)->column('id,cName');
+				return $result;
+			}
+		}
+	}
+
+	/**
+	 * 发送 IDC 备案信息给厂家联系人
+	 */
+	public function sendBeiAnResultEmail($id = '')
+	{
+		$order = "1,6,10,15,17,23,28,19";
+		// instanceId,cName,ip,mPerson,mEmail,aEmail,extra,ifOnu
+		$field = $this->getHeader("zx_apply-new-rb", $order, true);
+		$items = explode(",", $this->getHeader("zx_apply-new-rb", $order));
+		array_pop($items); // 去掉 ifOnu
+		$db = Infotables::field($field)->find($id);
+		// 转换 extra 信息
+		$extraHeader = config("extraInfo");
+		foreach ($extraHeader as $k => $v) {
+			if (array_key_exists($v, $db["extra"])) {
+				$db[$v] = $db["extra"][$v];
+				array_push($items, $k);
+			}
+			unset($db["extra"]);
+		}
+		$values = array_values($db->toArray());
+		$title = config('idc.title_city') . 'IDC.ISP-' . $db->ip . "-" . $db->cName;
+		$contact = config('idc_contact');
+		$contact_str = implode(',', $contact);
+		$body = "--本邮件用来idc备案--";
+		$body .= "<br><table style='border-collapse:collapse;border:none;'>";
+		for ($i = 0; $i < count($items); $i++) {
+			$body .= "<tr>";
+			$body .= "<th style='width:200px;border:solid #666 1px;'>" . $items[$i] . "</th><td style='width:500px;border:solid #666 1px;'>" . $values[$i] . "</td>";
+			$body .= "</tr>";
+		}
+		$body .= "</table>";
+		$body .= "<p style='color:#000;background-color:#ccc;font-size:12px;'>备案信息由客户经理<span style='color:blue'>" . $db->mPerson . "(" . $db->mEmail;
+		$body .= ")</span>负责填写，并确保其完整性、准确性。<br>本邮件由辅助平台自动发送给厂家联系人：" . $contact_str . "，并抄送给 IP 地址管理员。</p>";
+		$body .= "如备案信息有误，请厂家联系人联系客户经理。由客户经理负责登陆辅助平台进行更正重新提交，或直接回复给厂家联系人。";
+		$address = $contact;
+		$address['CCm'] = $db->mEmail;
+		$address['CCa'] = $db->aEmail;
+		foreach (config("manageEmails") as $k => $v) {
+			$address['CC' . $k] = $v . "@ln.chinamobile.com";
+		}
+		$result = $this->sendEmail($address, $title, $body);
+		return $this->result($result, is_bool($result) ? 1 : 0);
 	}
 
 	/**
