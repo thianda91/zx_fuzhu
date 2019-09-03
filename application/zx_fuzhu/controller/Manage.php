@@ -132,7 +132,7 @@ class Manage extends Index
 					if (isset($data["vlan"]) && ($info->status == 0 || $info->status == 4)) {
 						Infotables::where("id", $data["id"])->setInc("status");
 					}
-					return $this->result($this->refleshTodoList(), 1, "操作成功。<br>是否发送邮件通知给客户经理？");
+					return $this->result($this->refleshTodoList(), 1, "操作成功。<br>是否发送邮件通知客户经理填写备案信息？");
 				} else {
 					$msg = "本次提交无修改";
 					$logValue = [
@@ -209,7 +209,7 @@ class Manage extends Index
 		// $title = config('idc.title_city') . 'IDC.ISP-' . $db->ip . "-" . $db->cName;
 		$contact = config('idc_contact');
 		$contact_str = implode(',', $contact);
-		$body = '<p>请客户经理及时填写 IDC/ISP 备案信息：</p>' . $this->todo_link_str('index/idc_isp');
+		$body = '<p>请客户经理及时填写 IDC/ISP 备案信息：</p>' . $this->todo_link_str('index/ipbeian');
 		$body .= "<hr><p>请申请人阅知。</p>";
 		$body .= "<br><table style='border-collapse:collapse;border:none;'>";
 		for ($i = 0; $i < count($items); $i++) {

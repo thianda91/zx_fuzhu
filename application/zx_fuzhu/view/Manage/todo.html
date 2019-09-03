@@ -244,6 +244,7 @@
 				title: "&nbsp;",
 				text: data.msg,
 				callback: function (result) {
+					// 成功后询问是否发邮件通知（data.msg）
 					result && sendBeiAnNotice();
 					myList.clearAll();
 					data.data && myList.parse(data.data, "json");
@@ -332,7 +333,7 @@
 		dhxWins.window("_vlans").setText(text);
 		dhxWins.window("_vlans").attachHTMLString(str);
 	}
-	/* 发送 [ip已分配] 请进行 IDC/ISP 备案的邮件 */
+	/* 发送 [ip已分配] 请进行 IDC/ISP 备案的邮件 */ 
 	function sendBeiAnNotice() {
 		var data = JSON.parse(sessionStorage.getItem("emailData"));
 		$.post("sendBeiAnNotice.html", data, function (d) {

@@ -207,18 +207,10 @@ class Index extends Common
 					unset($v[$exH]);
 				}
 			}
+			$data['status'] = 2;
 			$result = $infotables->isUpdate(true)->allowField(true)->save($v, ["id" => $data['cName']]);
 			// 自动发IDC备案信息给厂家
-			$this->sendBeiAnResultEmail(input("post.id"));
-
-			$address = config('idc_contact');
-			$subject =
-				$attachment = Generator::generateIDCinfoFiles(input("post.id"));
-			$result = $this->sendEmail($address, $subject, $body);
-			// 抄送 IP 地址管理员，申请人、客户经理
-			$subject = "[待办]ip申请-" . ($data["ifOnu"] ? "onu" : "9312") . "-" . $data["cName"] . $data["instanceId"];
-			$body = $this->todo_link_str();
-			$this->sendManageNotice($subject, $body, true);
+			return $this->sendBeiAnResultEmail(input("post.id"));
 		}
 		if (request()->isPut()) {
 			if (input("param.r") == "get_cnames") {
@@ -230,6 +222,9 @@ class Index extends Common
 
 	/**
 	 * 发送 IDC 备案信息给厂家联系人
+	 *
+	 * @param string $id
+	 * @return void
 	 */
 	public function sendBeiAnResultEmail($id = '')
 	{

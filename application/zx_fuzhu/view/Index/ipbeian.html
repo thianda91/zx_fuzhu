@@ -51,14 +51,14 @@
                 $.post("", myData, function (data) {
                     data.code == 1 && dhtmlx.alert({
                         title: "&nbsp;",
-                        text: "提交成功。",
+                        text: "操作成功。已自动发送 idc 备案邮件。",
                         callback: function () {
-                            location.href = data.msg;
+                            history.go(0);
                         },
                     });
                     data.code == 0 && dhtmlx.alert({
                         type: "alert-error",
-                        title: data.msg,
+                        title: data.msg, // 返回始终为 null
                         text: data.data
                     });
                 });

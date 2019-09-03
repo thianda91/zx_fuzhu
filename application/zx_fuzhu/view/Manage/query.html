@@ -637,14 +637,15 @@
             }
         }
         str += '</div><hr style="margin-bottom:0"><p class="text-muted">标记为</p><p style="padding:0 10px;">';
+        // 下面的 str 中 没有使用 backgroundColor[x] 是因为 class 带其他属性，重构代码量太大
         str += '<a class="btn btn-xs btn-default" style="background-color:#aaa" onclick="updateStatus(' + row +
-            ',9)">历史导入</a>' +
-            '<a class="btn btn-xs btn-default" onclick="updateStatus(' + row + ',0)">刚申请</a>' +
-            '<a class="btn btn-xs btn-warning" onclick="updateStatus(' + row + ',1)">预分配</a>' +
-            '<a class="btn btn-xs"style="color: #fff;background-color: #e3a0f5;border-color: #d597eb;" onclick="updateStatus(' + row + ',2)">IDC已备等待录资管等待工信部IP备案</a>' +
-            '<a class="btn btn-xs btn-info" onclick="updateStatus(' + row + ',3)">已录资管&工信部已备等待IDC备案</a>' +
-            '<a class="btn btn-xs btn-success" onclick="updateStatus(' + row + ',4)">等待做数据</a>' +
-            '<a class="btn btn-xs btn-default" onclick="updateStatus(' + row + ',5)">完成</a>';
+            ',9)">' + info_status[9] + '</a>' +
+            '<a class="btn btn-xs btn-default" onclick="updateStatus(' + row + ',0)">' + info_status[0] + '</a>' +
+            '<a class="btn btn-xs btn-warning" onclick="updateStatus(' + row + ',1)">' + info_status[1] + '</a>' +
+            '<a class="btn btn-xs" style="color: #fff;background-color: #e3a0f5;border-color: #d597eb;" onclick="updateStatus(' + row + ',2)">' + info_status[2] + '</a>' +
+            '<a class="btn btn-xs btn-info" onclick="updateStatus(' + row + ',3)">' + info_status[3] + '</a>' +
+            '<a class="btn btn-xs btn-success" onclick="updateStatus(' + row + ',4)">' + info_status[4] + '</a>' +
+            '<a class="btn btn-xs btn-default" onclick="updateStatus(' + row + ',5)">' + info_status[5] + '</a>';
         str += '</p><p class="h3 bg-info">使用右键菜单发现更多操作</p>';
         str = str.replace(/null|undefined/g, "");
         $("detail").html(str);
@@ -760,29 +761,17 @@
                 var key = sessionStorage.getItem("export_key");
                 var settings = {
                     export_zg: {
-                        header: ["描述", "所属地市*", "IP地址*", "使用状态*", "所属上一级子网名*", "业务类型*", "业务小类*", "设备名称", "联系人姓名(客户侧)", "联系电话(客户侧)",
-                            "分配使用时间", "负责人姓名(移动侧)*", "负责人电话(移动侧)*", "备注", "所属单位*", "数据质量责任人*", "单位名称/具体业务信息*", "单位所属分类", "单位性质", "所属省份*",
-                            "单位详细地址", "联系人邮箱(客户侧)", "负责部门(移动侧)*", "负责人邮箱(移动侧)*", "Loopbak地址", "所属区县", "单位行政级别", "单位所属行业分类", "网关物理位置",
-                            "使用方式", "经营许可证编号", "网关IP地址", "政企专线计费代号", "管理状态*", "机房", "接入端口信息"
-                        ],
+                        header: ["描述", "所属地市*", "IP地址*", "使用状态*", "所属上一级子网名*", "业务类型*", "业务小类*", "设备名称", "联系人姓名(客户侧)", "联系电话(客户侧)", "分配使用时间", "负责人姓名(移动侧)*", "负责人电话(移动侧)*", "备注", "所属单位*", "数据质量责任人*", "单位名称/具体业务信息*", "单位所属分类", "单位性质", "所属省份*", "单位详细地址", "联系人邮箱(客户侧)", "负责部门(移动侧)*", "负责人邮箱(移动侧)*", "Loopbak地址", "所属区县", "单位行政级别", "单位所属行业分类", "网关物理位置", "使用方式", "经营许可证编号", "网关IP地址", "政企专线计费代号", "管理状态*", "机房", "接入端口信息"],
                         worksheetIndex: 1,
                         fileType: "xls",
                     },
                     export_jtip: {
-                        header: ["属性中文名称", "网段名称", "单位名称/具体业务信息", "单位所属分类", "经营许可证编号", "单位性质", "所属省份", "所属地市", "所属区县", "单位行政级别",
-                            "单位所属行业分类", "单位详细地址", "联系人姓名(客户侧)", "联系人电话(客户侧)", "联系人邮箱(客户侧)", "网关物理位置", "使用方式", "分配使用时间", "网关IP地址", "业务类型",
-                            "使用状态", "管理状态", "机房", "设备名称", "Loopbak地址", "接入端口信息", "负责部门(移动侧)", "负责人姓名(移动侧)", "负责人电话(移动侧)", "负责人邮箱(移动侧)",
-                            "备注"
-                        ],
+                        header: ["属性中文名称", "网段名称", "单位名称/具体业务信息", "单位所属分类", "经营许可证编号", "单位性质", "所属省份", "所属地市", "所属区县", "单位行政级别", "单位所属行业分类", "单位详细地址", "联系人姓名(客户侧)", "联系人电话(客户侧)", "联系人邮箱(客户侧)", "网关物理位置", "使用方式", "分配使用时间", "网关IP地址", "业务类型", "使用状态", "管理状态", "机房", "设备名称", "Loopbak地址", "接入端口信息", "负责部门(移动侧)", "负责人姓名(移动侧)", "负责人电话(移动侧)", "负责人邮箱(移动侧)", "备注"],
                         worksheetIndex: 1,
                         fileType: "xlsx",
                     },
                     export_gxbip: {
-                        header: ["起始IP地址/IP*（192.168.1.1）", "终止IP地址/掩码*（192.168.1.1）", "单位名称*", "单位所属分类*\r\n（参看选项表）",
-                            " 经营许可证编号 \r\n(单位所属分类为电信业务经营者时必填) ", "单位性质*\r\n（参看选项表）", "单位所在省*\r\n（参看选项表）", "单位所在市*\r\n（参看选项表）",
-                            "单位所在县\r\n（参看选项表）", "单位行政级别\r\n（参看选项表）", " 单位所属行业分类\r\n（参看选项表）", "单位详细地址*", "联系人姓名*", "联系人电话*", " 联系人电子邮箱* ",
-                            "网关物理位置", "使用方式*\r\n（参看选项表） ", " 分配使用时间*\r\n（2011-08-09） ", "网关IP地址"
-                        ],
+                        header: ["序号", "IP地址类型*", "起始IP地址*", "终止IP地址*", "使用方式*", "分配使用时间*", "单位名称*", "单位性质*", "单位分类*", "行业分类*", "使用单位证件类型*", "使用单位证件号码*", "单位所在省*", "单位所在市*", "单位所在县*", "单位详细地址*", "联系人姓名*", "联系人电话*", "联系人邮箱*", "网关IP地址类型*", "网关IP地址*", "网关所在省*", "网关所在市*", "网关所在县*", "网关详细地址*", "使用区域*", "备注", "IP地址类型*", "起始IP地址*", "终止IP地址*", "IP所在省*", "IP所在市*", "IP所在县*", "IP详细地址*", "应用服务类型*", "备注"],
                         worksheetIndex: 5,
                         fileType: "xls",
                     },
@@ -794,12 +783,13 @@
         console.log("\t\tput(key):submit:", args);
         if (key !== 'export_zg') return; // 仅export_zg后执行
         setTimeout(function(rows) {
+            var _status = 3;
             dhtmlx.confirm({
                 title: "自动修改状态？",
-                text: "是否修改导出项的状态为：<br><br><button class='btn btn-xs btn-success'>等待做数据</button>",
+                text: "是否修改导出项的状态为：<br><br><button class='btn btn-xs' style='background-color:" + backgroundColor[_status] + "'>" + info_status[_status] + "</button>",
                 callback: function(result) {
                     if (result) {
-                        updateStatusMulti(rows, 4);
+                        updateStatusMulti(rows, _status);
                     }
                 }
             });
@@ -1066,6 +1056,18 @@
         7: "",
         8: "",
         9: "#aaa"
+    };
+    var info_status = {
+        0: "刚申请",
+        1: "预分配",
+        2: "IDC已备等待录资管等待工信部IP备案",
+        3: "已录资管&工信部已备等待IDC备案",
+        4: "等待做数据",
+        5: "完成",
+        6: "",
+        7: "",
+        8: "",
+        9: "历史导入"
     };
 </script>
 <script id="genXLSX">
