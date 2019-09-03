@@ -188,7 +188,7 @@
 		var cal = 0;
 		for (var i in myForm.getFormData()) {
 			_tem = myForm.getFormData()[i] + "";
-			_new = _tem.replace(/ /g, "");
+			_new = _tem.replace(/[ \r\n]+/g, "");
 			if (_tem != _new) {
 				cal++;
 			}

@@ -31,8 +31,8 @@
 				var myData = myForm.getFormData();
 				for (var i in myData) {
 					if (typeof (myData[i]) != "undefined") {
-						// 去空格
-						myData[i] = String(myData[i]).replace(/ /g, "");
+						// 去空格，回车，换行
+						myData[i] = String(myData[i]).replace(/[ \r\n]+/g, "");
 					}
 				}
 				$.post("", myData, function (data) {

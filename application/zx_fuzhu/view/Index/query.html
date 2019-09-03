@@ -1,6 +1,7 @@
 {extend name="common@public/base" /} {block name="head"}
 <link rel="STYLESHEET" type="text/css" href="__STATIC__/handsontable-pro/handsontable.full.min.css">
-<script src="__STATIC__/handsontable-pro/handsontable.full.min.js"></script> {/block} {block name="leftmenu"} {include file="common/leftmenu_zx_apply_index" /} {/block} {block name="main"}
+<script src="__STATIC__/handsontable-pro/handsontable.full.min.js"></script> {/block}
+{block name="leftmenu"} {include file="common/leftmenu_zx_apply_index" /} {/block} {block name="main"}
 <div class="htmltitle">
 	<span class="h2" style="margin-right: 50px">信息查询</span>
 	<span>请选择类别：</span>
@@ -23,11 +24,14 @@
 			</select>
 			<input type="text" class="form-control" id="searchStr">
 		</div>
-		<button id="btn-search" type="submit" class="btn btn-default" data-toggle="tooltip" data-placement="top" title="当前页搜索不限制列名，可搜索任意字段">当前页搜索</button>
-		<button id="btn-searchAll" class="btn btn-default" data-toggle="tooltip" data-placement="top" title="全局搜索需根据列名搜索">全局搜索</button>
-		<button id="btn-searchBrief" class="btn btn-primary" data-toggle="tooltip" data-placement="top" title="基于列名模糊搜索历史信息">历史信息查询</button>
-		<div id="tips" class="form-group" style="display: none; margin-left: 20px;">
-			<span id="tips-text" class="text-primary"></span>
+		<button id="btn-search" type="submit" class="btn btn-default" data-toggle="tooltip" data-placement="top"
+			title="当前页搜索不限制列名，可搜索任意字段">当前页搜索</button>
+		<button id="btn-searchAll" class="btn btn-default" data-toggle="tooltip" data-placement="top"
+			title="全局搜索需根据列名搜索">全局搜索</button>
+		<button id="btn-searchBrief" class="btn btn-primary" data-toggle="tooltip" data-placement="top"
+			title="基于列名模糊搜索历史信息">历史信息查询</button>
+		<div id="tips" class="form-group" style="display: none; margin-left: 20px;"> <span id="tips-text"
+				class="text-primary"></span>
 			<button id="tips-btn" class="btn btn-xs btn-primary">定位到下一个</button>
 		</div>
 		<div id="tips-msg" class="form-group text-muted" style="margin-left: 20px;"></div>
@@ -42,7 +46,7 @@
 		cache: true,
 	});
 	$(function ($) {
-		//$(".wtHolder")[0].style.height="";	//修复wtHolder层（handsontable右键菜单）height过大。
+		//$(".wtHolder")[0].style.height=""; //修复wtHolder层（handsontable右键菜单）height过大。
 		$(".fixed-container").css("height", (_htmlHeight - 190) + "px");
 		var tt = Date.now();
 		initHandsontable(infoData);
@@ -91,7 +95,7 @@
 	var colHeaderData = "{$colHeaderData}";
 	var container = document.getElementById('queryTable');
 	var infoData, hot, columnsData, contextMenuData;
-	infoData = {$data};
+	infoData = JSON.parse('{$data}');
 	columnsData = [{
 		data: 'create_time',
 		type: "date",
@@ -129,8 +133,8 @@
 		data: 'ip',
 		readOnly: true
 		/*}, {
-			data : 'ipB',
-			readOnly: true*/
+		 data : 'ipB',
+		 readOnly: true*/
 	}, {
 		data: 'cPerson',
 	}, {
@@ -524,8 +528,8 @@
 		}
 		if (!$.isArray(data)) {
 			dhtmlx.alert({
-				type: "alert-error", 
-				text: "查询过于频繁，请 10 分种后再试！<br>（当前查询累计 " +  data + " 次）"
+				type: "alert-error",
+				text: "查询过于频繁，请 10 分种后再试！<br>（当前查询累计 " + data + " 次）"
 			});
 			return;
 		}
@@ -805,9 +809,9 @@
 		0: "#fff",
 		1: "#f0ad4e",
 		2: "#e3a0f5",
-        3: "#5bc0de",
-        4: "#5cb85c",
-        5: "#fff",
+		3: "#5bc0de",
+		4: "#5cb85c",
+		5: "#fff",
 		6: "",
 		7: "",
 		8: "",
