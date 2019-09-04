@@ -75,6 +75,7 @@ steps:
 							type: "block", inputWidth: "auto", blockOffset: "0", list: [
 								{ type: "input", name: "name", label: "申请人姓名", required: true },
 								{ type: "combo", name: "email", label: "申请人邮箱", validate: "ValidEmail", required: true },
+								{ type: "input", name: "url", label: "当前url", value: location.href, hidden: true, required: true },
 								//{type:"input",name:"fe_code",label:"验证码",required:true},
 							]
 						}
@@ -226,24 +227,24 @@ steps:
 		});
 	}
 /*
-	function setCookies(c_name, value, expiresdays) {
-		var exdate = new Date();
-		exdate.setDate(exdate.getDate() + expiresdays);
-		document.cookie = c_name + "=" + escape(value) + ";expires="
-				+ exdate.toGMTString();
-	}
-	function getCookies(c_name) {
-		if (document.cookie.length > 0) {
-			c_start = document.cookie.indexOf(c_name + "=");
-			if (c_start != -1) {
-				c_start = c_start + c_name.length + 1;
-				c_end = document.cookie.indexOf(";", c_start);
-				if (c_end == -1)
-					c_end = document.cookie.length;
-				return unescape(document.cookie.substring(c_start, c_end));
+			function setCookies(c_name, value, expiresdays) {
+				var exdate = new Date();
+				exdate.setDate(exdate.getDate() + expiresdays);
+				document.cookie = c_name + "=" + escape(value) + ";expires="
+						+ exdate.toGMTString();
 			}
-		}
-		return "";
-	}
-	*/
+			function getCookies(c_name) {
+				if (document.cookie.length > 0) {
+					c_start = document.cookie.indexOf(c_name + "=");
+					if (c_start != -1) {
+						c_start = c_start + c_name.length + 1;
+						c_end = document.cookie.indexOf(";", c_start);
+						if (c_end == -1)
+							c_end = document.cookie.length;
+						return unescape(document.cookie.substring(c_start, c_end));
+					}
+				}
+				return "";
+			}
+			*/
 </script> {/block}

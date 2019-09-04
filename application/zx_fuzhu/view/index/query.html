@@ -1,6 +1,5 @@
-{extend name="common@public/base" /} {block name="head"}
-<link rel="STYLESHEET" type="text/css" href="__STATIC__/handsontable-pro/handsontable.full.min.css">
-<script src="__STATIC__/handsontable-pro/handsontable.full.min.js"></script> {/block}
+{extend name="common@public/base" /}
+{block name="head"} {include file="common@c/_handsontable" /} {/block}
 {block name="leftmenu"} {include file="common/leftmenu_zx_apply_index" /} {/block} {block name="main"}
 <div class="htmltitle">
 	<span class="h2" style="margin-right: 50px">信息查询</span>

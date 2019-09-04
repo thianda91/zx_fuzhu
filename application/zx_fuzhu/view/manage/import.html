@@ -1,4 +1,4 @@
-{extend name="common@public/base" /} {block name="leftmenu"} {include file="Common/leftmenu_zx_apply_manage" /} {/block}{block
+{extend name="common@public/base" /} {block name="leftmenu"} {include file="common/leftmenu_zx_apply_manage" /} {/block}{block
 name="main"}
 <div class="htmltitle">
 	<span class="h2" style="margin-right:50px">专线申请表录入</span>
@@ -6,7 +6,7 @@ name="main"}
 <div id="pasteDiv">
 	<p>
 		请根据模板（
-		<a href="/sampleData/import-template-zx_apply.xlsx" title='点击下载模板' download="数据专线批量录入模板.xlsx">点击下载</a>）格式，填好后将数据（
+		<a href="__STATIC__/sampleData/import-template.xlsx" title='点击下载模板' download="数据专线批量录入模板.xlsx">点击下载</a>）格式，填好后将数据（
 		<b>不带标题，可多行</b>）直接粘贴至下面文本框， 然后点击
 		<button id="btn_submit" class="btn btn-xs btn-primary">导入</button>
 	</p>

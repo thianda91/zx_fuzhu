@@ -224,7 +224,7 @@ class Generator extends Common
 			$data = Infotables::get($id)->toArray();
 			$cellValues["C" . $row] = $data["ip"] . "/32"; // ip
 			$cellValues["K" . $row] = $data["create_time"]; // 分配时间
-			$cellValues["N" . $row] = $data["vlan"] . $default['N']; // 备注
+			$cellValues["N" . $row] = $data["vlan"] . " " . $default['N']; // 备注
 			$cellValues["Q" . $row] = $data["cName"]; // 客户名
 			$cellValues["S" . $row] = $data["extra"]["unitAttribute"]; // 企业属性
 			/* 以下为选填 */

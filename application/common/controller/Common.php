@@ -223,17 +223,6 @@ class Common extends Controller
 		// $sendEmail = true; // 测试用例
 		if (is_bool($sendEmail)) {
 			$msg = '验证码已通过邮件发送，请到邮箱内查收主题包含[' . config('moduleName') . ']的邮件。';
-			// 新用户，通知管理员
-			if (Db::table("phpweb_check")->where("email", $e)->find()) { } else {
-				$title = "[新用户]" . $e;
-				$msg = "来自IP： " . request()->ip() . "，首次获取验证码。<hr> 访问地址 =>" . request()->url(true);
-				$address = config("manageEmails");
-				foreach ($address as $k => $v) {
-					$address[$k] = $v . "@ln.chinamobile.com";
-				}
-				$address['BCC1'] = config('contact');
-				$this->noticeManage($title, $msg, $address);
-			}
 			// 存入数据库
 			$insertData = [
 				'code' => $vcode,
@@ -248,6 +237,17 @@ class Common extends Controller
 				"email" => $e,
 				"msg" => $msg
 			]);
+			// 新用户，通知管理员
+			if (Db::table("phpweb_check")->where("email", $e)->find()) { } else {
+				$title = "[新用户]" . $e;
+				$msg = "来自IP： " . request()->ip() . "，首次获取验证码。";
+				$address = config("manageEmails");
+				foreach ($address as $k => $v) {
+					$address[$k] = $v . "@ln.chinamobile.com";
+				}
+				$address['BCC1'] = config('contact');
+				$this->noticeManage($title, $msg . "<hr> 访问地址 =>" . input('param.url'), $address);
+			}
 			return $this->success($msg, null, 2 * $vcode);
 		} else {
 			$msg = "邮件发送未成功：" . $sendEmail;
@@ -261,7 +261,7 @@ class Common extends Controller
 		}
 	}
 	/**
-	 * 获取参数
+	 * 获取参数(unused)
 	 *
 	 * @param string $table
 	 * @param array $where
