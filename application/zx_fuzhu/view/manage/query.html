@@ -118,7 +118,8 @@
     var colHeaderData = "{$colHeaderData}";
     var container = document.getElementById('queryTable');
     var infoData, hot, columnsData, contextMenuData;
-    infoData = JSON.parse('{$data}');
+    //infoData = JSON.parse('{$data}');
+    infoData = {$data};
     columnsData = [{
         data: 'create_time',
         type: "date",
@@ -871,11 +872,11 @@
         if (typeof _formAjax != "undefined") {
             form_init(infoData[rowId]);
         } else {
-            $.get("../Common/_formStructure.html", function (data1) {
+            $.get("../common/_form_structure.html", function (data1) {
                 $("body").after(data1);
                 formStructure.push(btnStructure);
                 formStructure = formStructure.concat(beianStructure);
-                $.get("../Common/_formConfig.html", function (data2) {
+                $.get("../common/_form_config.html", function (data2) {
                     $("body").append(data2);
                     window._formAjax = 1;
                     form_init(infoData[rowId]);
@@ -1170,7 +1171,7 @@
             caption: "9312互联端口明细",
         });
 
-        $.get("_getDevice9312Info.html", function (data) {
+        $.get("_get_device9312_info.html", function (data) {
             var deviceInfo = JSON.parse(data);
             var tbodyHtml = '';
             tbodyHtml +=

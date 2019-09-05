@@ -1,5 +1,11 @@
 ## 更新日志
 
+
+### v0.10.1(2019-09-05)
+
+- 修复请求中含大写的情况。（全部改小写）
+  > 待验证
+
 ### v0.10.0(2019-09-05)
 
 - 修复 bug
@@ -53,7 +59,7 @@
 4： 等待做数据  
 5： 已完成   
 ```
-- 修复填表单时，若`neFactory`选为 ONU，对`aStation`字段的要求。（`_formStructure.html`中的`fixExtraFields()、onChangeHandler()`函数）
+- 修复填表单时，若`neFactory`选为 ONU，对`aStation`字段的要求。（`_form_structure.html`中的`fixExtraFields()、onChangeHandler()`函数）
 ```
 涉及的页面有
 index/apply.html

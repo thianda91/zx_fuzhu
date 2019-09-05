@@ -3,7 +3,6 @@
 namespace app\zx_fuzhu\controller;
 
 use app\common\controller\Common as CCommon;
-use app\zx_fuzhu\model\Infotables;
 use think\Session;
 use think\Config;
 
@@ -33,7 +32,7 @@ class Common extends CCommon
 	}
 	public function _empty()
 	{
-		$dir = APP_PATH . request()->module() . DS . "view" . DS . request()->controller() . DS . request()->action() . "." . config('template.view_suffix');
+		$dir = APP_PATH . request()->module() . DS . "view" . DS . strtolower(request()->controller()) . DS . request()->action() . "." . config('template.view_suffix');
 		if (file_exists($dir))
 			return $this->fetch(request()->action());
 		else {

@@ -173,7 +173,7 @@ steps:
 				myForm.enableItem("getVcode");
 				$('input[name="code"]').removeAttr("placeholder");
 			},
-			url: "/{$Request.module}/index/getVcode/" + formData.email + "/",
+			url: "/{$Request.module}/index/getvcode/" + formData.email + "/",
 			data: formData,
 			success: function (data) {
 				console.log(data);

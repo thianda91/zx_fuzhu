@@ -621,11 +621,11 @@
 			if (typeof _formAjax != "undefined") {
 				form_init(infoData[rowId]);
 			} else {
-				$.get("../common/_formStructure.html", function (data1) {
+				$.get("../common/_form_structure.html", function (data1) {
 					$("body").after(data1);
 					formStructure.push(btnStructure);
 					formStructure = formStructure.concat(beianStructure);
-					$.get("../common/_formConfig.html", function (data2) {
+					$.get("../common/_form_config.html", function (data2) {
 						$("body").append(data2);
 						window._formAjax = 1;
 						form_init(infoData[rowId]);

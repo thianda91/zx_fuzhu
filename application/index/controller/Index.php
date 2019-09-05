@@ -49,7 +49,7 @@ class Index extends Controller
 	}
 	public function _empty()
 	{
-		$dir = APP_PATH . request()->module() . DS . "view" . DS . request()->controller() . DS . request()->action() . "." . config('template.view_suffix');
+		$dir = APP_PATH . request()->module() . DS . "view" . DS . strtolower(request()->controller()) . DS . request()->action() . "." . config('template.view_suffix');
 		if (file_exists($dir))
 			return $this->fetch(request()->action());
 		else {

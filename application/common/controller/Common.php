@@ -185,7 +185,7 @@ class Common extends Controller
 	 * @param string $e
 	 * @param number $ttl
 	 */
-	public function getVcode($e = '', $ttl = '120')
+	public function getvcode($e = '', $ttl = '120')
 	{
 		if (preg_match('/[^A-Za-z0-9.@_]+/', $e)) {
 			return $this->error('非法邮箱地址哦');
@@ -402,7 +402,7 @@ class Common extends Controller
 	public function _empty()
 	{
 		$request = Request::instance();
-		$dir = APP_PATH . $request->module() . DS . "view" . DS . $request->controller() . DS . $request->action() . "." . config('template.view_suffix');
+		$dir = APP_PATH . $request->module() . DS . "view" . DS . strtolower($request->controller()) . DS . $request->action() . "." . config('template.view_suffix');
 		if (file_exists($dir))
 			return $this->fetch($request->action());
 		else {

@@ -276,7 +276,7 @@ class Manage extends Index
 	}
 
 
-	public function _getDevice9312Info()
+	public function _get_device9312_info()
 	{
 		return base64_decode(config("device9312"));
 	}

@@ -107,11 +107,11 @@
 			if (typeof _formAjax != "undefined") {
 				form_init(data0);
 			} else {
-				$.get("../common/_formStructure.html", function (data1) {
+				$.get("../common/_form_structure.html", function (data1) {
 					$("body").after(data1);
 					formStructure = formStructure.concat(beianStructure);
 					formStructure[3].list.unshift(buttons);
-					$.get("../common/_formConfig.html", function (data2) {
+					$.get("../common/_form_config.html", function (data2) {
 						$("body").append(data2);
 						window._formAjax = 1;
 						form_init(data0);
@@ -171,7 +171,7 @@
 						if (typeof calculateUsedVlans == 'function') {
 							showUsedVlans(d);
 						} else {
-							$.get("../common/_calculateUsedVlans.html", function (data) {
+							$.get("../common/_calculate_used_vlans.html", function (data) {
 								$("body").append(data);
 								showUsedVlans(d);
 							});

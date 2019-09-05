@@ -29,7 +29,7 @@
 </div>
 {/block} {block name="script"}
 <script>
-	var updateLastIP_formStructure = [
+	var updateLastIP_form_structure = [
 		{ type: "settings", labelWidth: 100, inputWidth: 200 },
 		{
 			type: "fieldset", name: "updateLastIP", label: "1.更新最后一次分配的IP", width: 950, offsetLeft: 15, list: [
@@ -71,9 +71,9 @@
 		},
 
 	];
-	var myForm = new dhtmlXForm("updateLastIP", updateLastIP_formStructure);
+	var myForm = new dhtmlXForm("updateLastIP", updateLastIP_form_structure);
 	myForm.enableLiveValidation(true);
-</script> {include file="common/_formConfig" /}
+</script> {include file="common/_form_config" /}
 <script>
 	myForm.reloadOptions("zxType", config["default"]["zxType"]);
 	myForm.setItemValue("lastIpStr", "{$lastIp|default=''}");
@@ -99,7 +99,7 @@
 			if (typeof calculateUsedVlans == 'function') {
 				showVlanBatch(data.usedVlans);
 			} else {
-				$.get("../common/_calculateUsedVlans.html", function (data2) {
+				$.get("../common/_calculate_used_vlans.html", function (data2) {
 					$("body").append(data2);
 					showVlanBatch(data.usedVlans);
 				});
