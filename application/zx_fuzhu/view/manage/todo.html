@@ -109,8 +109,8 @@
 			} else {
 				$.get("../common/_form_structure.html", function (data1) {
 					$("body").after(data1);
-					formStructure = formStructure.concat(beianStructure);
-					formStructure[3].list.unshift(buttons);
+					// formStructure = formStructure.concat(beianStructure);
+					formStructure[1].list.unshift(buttons);
 					$.get("../common/_form_config.html", function (data2) {
 						$("body").append(data2);
 						window._formAjax = 1;
@@ -127,10 +127,11 @@
 		sessionStorage.setItem("formData",JSON.stringify(formData));
 		$("#form_container").html("");
 		myForm = null;
+		formStructure.push(btnStructure);
 		myForm = new dhtmlXForm('form_container', formStructure);
 		myForm.setItemLabel("basic", myForm.getItemLabel("basic") + " - [单号: " + formData["detail"]["id"] + " ]");
-		myForm.addItem("ip_bak", ipStructure, 0, 0);
-		myForm.addItem("ip_bak", vlanStructure, 0, 0);
+		myForm.addItem("basic", ipStructure, 0, 0);
+		myForm.addItem("basic", vlanStructure, 0, 0);
 		myForm.enableLiveValidation(true);
 		initCombo();
 		myForm.attachEvent("onChange", onChangeHandler);

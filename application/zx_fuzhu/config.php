@@ -1,6 +1,6 @@
 <?php
 return [
-	'version' => "V0.10.1",
+	'version' => "V0.10.2",
 	// 额外信息，用于IP备案
 	'extraInfo' => [
 		"单位性质" => "unitProperty",
