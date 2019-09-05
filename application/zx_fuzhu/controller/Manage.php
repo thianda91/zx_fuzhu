@@ -199,11 +199,13 @@ class Manage extends Index
 			return $this->result("Wrong Req", 0);
 		}
 		// 忽略送来的参数，从数据库获取
-		$order = "1,2,3,6,4,5,9,10,15,17,23,19";
-		// instanceId,zxType,bandWidth,cName,neFactory,aStation,vlan,ip,mPerson,mEmail,aEmail,ifOnu
+		$order = "1,3,6,4,5,9,10,15,22,17,23,19";
+		// instanceId,bandWidth,cName,neFactory,aStation,vlan,ip,mPerson,aPerson,mEmail,aEmail,ifOnu
 		$field = $this->getHeader("zx_apply-new-rb", $order, true);
 		$items = explode(",", $this->getHeader("zx_apply-new-rb", $order));
-		array_pop($items); // 去掉最后一个参数 ifOnu
+		array_pop($items); // 去掉最后 3 个参数 mEmail,aEmail,ifOnu
+		array_pop($items);
+		array_pop($items);
 		$db = Infotables::field($field)->find(input("post.id"));
 		$values = array_values($db->toArray());
 		$address = [$db->mEmail]; // 发给客户经理
@@ -211,8 +213,8 @@ class Manage extends Index
 		// $title = config('idc.title_city') . 'IDC.ISP-' . $db->ip . "-" . $db->cName;
 		$contact = config('idc_contact');
 		$contact_str = implode(',', $contact);
-		$body = '<p>请客户经理及时填写 IDC/ISP 备案信息：</p>' . $this->todo_link_str('index/ipbeian');
-		$body .= "<hr><p>请申请人阅知。</p>";
+		$body = "<p>请 <b>" . $db->mPerson . "</b> 及时填写 IDC/ISP 备案信息：</p>" . $this->todo_link_str('index/ipbeian');
+		$body .= "<hr><p>请 <b>" . $db->aPerson . "</b> 阅知。</p>";
 		$body .= "<br><table style='border-collapse:collapse;border:none;'>";
 		for ($i = 0; $i < count($items); $i++) {
 			$body .= "<tr>";
@@ -221,7 +223,7 @@ class Manage extends Index
 		}
 		$body .= "</table>";
 		$body .= "<p style='color:#000;background-color:#ccc;font-size:12px;'>请<span style='color:blue'>客户经理</span>尽快完成备案信息的填写，并确保其完整性、准确性。";
-		$body .= "<br>在辅助平台提交后会自动发送给厂家联系人：" . $contact_str . "，并自动抄送给 IP 地址管理员。</p>";
+		$body .= "<br>在辅助平台提交后会自动发送给厂家联系人：<b>" . $contact_str . "</b>，并自动抄送给 IP 地址管理员。</p>";
 		$body .= "如备案信息有误，在收到邮件后，登陆辅助平台进行更正，重新提交。";
 		$address['CCa'] = $db->aEmail; // 抄送申请人
 		if ($db->ifOnu) {

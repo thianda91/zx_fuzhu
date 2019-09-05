@@ -107,7 +107,7 @@ class Index extends Common
 			// }
 			$result = Infotables::createInfo($data, "apply");
 			// 发邮件通知 给客户经理，抄送 IP 地址管理员、当前申请人
-			$subject = "[待办]ip申请-" . ($data["ifOnu"] ? "onu" : "9312") . "-" . $data["cName"] . $data["instanceId"];
+			$subject = "[待办]ip申请-" . ($data["ifOnu"] ? "onu" : "9312") . "-" . $data["cName"] . "-" . $data["instanceId"];
 			$body = $this->todo_link_str();
 			$this->sendManageNotice($subject, $body, true);
 			$v = [

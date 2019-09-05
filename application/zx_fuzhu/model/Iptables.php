@@ -79,7 +79,7 @@ class Iptables extends Model
 		$infotables = new Infotables();
 		$data = $infotables->where([
 			"zxType" => $zxType,
-			$filed => $ip_start 
+			$filed => $ip_start
 			// $filed . "Mask" => $mask
 		])->field("id,cName")->find();
 		return $data;
@@ -146,7 +146,7 @@ class Iptables extends Model
 		if (!$long) {
 			return null;
 		}
-		if ($subnet_mask == -1 | $subnet_mask == "") {
+		if (in_array($subnet_mask, [-1, 0xFFFFFFFF, ""])) {
 			return long2ip($long);
 		} else {
 			$suffix = strlen(preg_replace("/0/", "", decbin($subnet_mask))); // 十进制转二进制 统计32-bits的二进制中1的个数

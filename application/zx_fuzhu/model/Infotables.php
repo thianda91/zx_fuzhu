@@ -11,8 +11,8 @@ class Infotables extends Model
 	protected $deleteTime = 'delete_time';
 	protected $autoWriteTimestamp = true;
 	protected $dateFormat = 'Y-m-d';
-	protected $type = [ 
-			// "aDate" => "date",
+	protected $type = [
+		// "aDate" => "date",
 		"extra" => "array"
 	];
 	public function setIpAttr($value)
