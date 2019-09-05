@@ -5,6 +5,7 @@ namespace app\zx_fuzhu\controller;
 use think\Db;
 use think\Cache;
 use app\zx_fuzhu\model\Infotables;
+use app\zx_fuzhu\model\Iptables;
 use app\zx_fuzhu\model\Vlantables;
 
 
@@ -606,7 +607,7 @@ class Index extends Common
 	 *
 	 * @param string $hash
 	 */
-	private function todo_link_str($hash = 'manage/todo')
+	protected function todo_link_str($hash = 'manage/todo')
 	{
 		return "<p>请登陆系统及时处理：</p><br> 内网： <a href='http://" . config('address_local') . "/" . config('moduleName') . "/index/index.html#" . $hash . "'>http://" . config('address_local') . "/" . config('moduleName') . "/index/index.html#" . $hash . "</a><br>外网： <a href='https://" . config('address_wide') . "/" . config('moduleName') . "/index/index.html#" . $hash . "'>https://" . config('address_wide') . "/" . config('moduleName') . "/index/index.html#" . $hash . "</a>";
 	}

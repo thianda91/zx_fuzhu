@@ -112,6 +112,15 @@ class Manage extends Index
 				}
 				$logKey = "分配IP";
 				if ($ifChanged) {
+					// 为以下操作约定 return 值：$msg 表示 提示信息（区分是ip问题还是vlan问题），$data 表示具体数据（如重复的客户名） 
+					$this->checkInstanceID($info, $data);
+					$data = $this->checkAndSetIp($info, $data);
+					$data = $this->checkAndSetVlan($data, $ignoreCheck);
+					$this->updateInfo($data);
+					// vlan 不为空，且 status 为 0 或者 4，则 status +1
+					if (isset($data["vlan"]) && ($info->status == 0 || $info->status == 4)) {
+						Infotables::where("id", $data["id"])->setInc("status");
+					}
 					$logValue = [
 						"status" => "success",
 						"name" => session("user.name"),
@@ -123,15 +132,6 @@ class Manage extends Index
 						"vlan" => $data["vlan"],
 					];
 					$this->log($logKey, $logValue);
-					// 为以下操作约定 return 值：$msg 表示 提示信息（区分是ip问题还是vlan问题），$data 表示具体数据（如重复的客户名） 
-					$this->checkInstanceID($info, $data);
-					$data = $this->checkAndSetIp($info, $data);
-					$data = $this->checkAndSetVlan($data, $ignoreCheck);
-					$this->updateInfo($data);
-					// vlan 不为空，且 status 为 0 或者 4，则 status +1
-					if (isset($data["vlan"]) && ($info->status == 0 || $info->status == 4)) {
-						Infotables::where("id", $data["id"])->setInc("status");
-					}
 					return $this->result($this->refleshTodoList(), 1, "操作成功。<br>是否发送邮件通知客户经理填写备案信息？");
 				} else {
 					$msg = "本次提交无修改";
@@ -161,8 +161,10 @@ class Manage extends Index
 	{
 		$extraHeader = config("extraInfo");
 		foreach ($extraHeader as $k => $v) {
-			$data["extra"][$v] = $data[$v];
-			unset($data[$v]);
+			if (isset($data[$v])) {
+				$data["extra"][$v] = $data[$v];
+				unset($data[$v]);
+			}
 		}
 		// unset ( $data ["delete_time"] );
 		$infotables = new Infotables();
