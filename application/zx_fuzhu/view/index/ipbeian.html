@@ -41,7 +41,7 @@
                     dhtmlx.alert("已自动去除<b class='text-danger'>" + num + "</b>个字段中的空格，请核对后再次提交。<br>下次请注意不要录入空格，谢谢。");
                     return;
                 }
-                // var myData = myForm.getFormData();
+                var myData = myForm.getFormData();
                 for (var i in myData) {
                     if (typeof (myData[i]) != "undefined") {
                         // 去空格

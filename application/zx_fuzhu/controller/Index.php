@@ -5,7 +5,6 @@ namespace app\zx_fuzhu\controller;
 use think\Db;
 use think\Cache;
 use app\zx_fuzhu\model\Infotables;
-use app\zx_fuzhu\model\Iptables;
 use app\zx_fuzhu\model\Vlantables;
 
 
@@ -190,28 +189,25 @@ class Index extends Common
 			return $this->fetch();
 		}
 		if (request()->isPost()) {
-			if (!input("?post.id")) {
+			if (!input("?post.cName")) {
 				return $this->result("没有传参", 0);;
 			}
 			// 提交时更新 Infotables，并发送idc备案邮件
 			$data = input('post.');
+			$id = $data['cName'];
+			unset($data['cName']);
 			$extraHeader = config("extraInfo");
 			foreach ($extraHeader as $k => $v) {
-				$data["extra"][$v] = $data[$v];
-				unset($data[$v]);
-			}
-			$infotables = new Infotables();
-			$extraHeader = config("extraInfo");
-			foreach ($extraHeader as $e => $exH) {
-				if (isset($v[$exH])) { // extra 部分有更新，需要先获取完整的
-					$v["extra"][$exH] = $v[$exH];
-					unset($v[$exH]);
+				if (isset($data[$v])) {
+					$data["extra"][$v] = $data[$v];
+					unset($data[$v]);
 				}
 			}
+			$infotables = new Infotables();
 			$data['status'] = 2;
-			$result = $infotables->isUpdate(true)->allowField(true)->save($v, ["id" => $data['cName']]);
+			$result = $infotables->isUpdate(true)->allowField(true)->save($data, ["id" => $id]);
 			// 自动发IDC备案信息给厂家
-			return $this->sendBeiAnResultEmail(input("post.id"));
+			return $this->sendBeiAnResultEmail($id);
 		}
 		if (request()->isPut()) {
 			if (input("param.r") == "get_cnames") {
@@ -229,23 +225,20 @@ class Index extends Common
 	 */
 	public function sendBeiAnResultEmail($id = '')
 	{
-		$order = "1,6,10,15,17,23,28,19";
-		// instanceId,cName,ip,mPerson,mEmail,aEmail,extra,ifOnu
-		$field = $this->getHeader("zx_apply-new-rb", $order, true);
-		$items = explode(",", $this->getHeader("zx_apply-new-rb", $order));
-		array_pop($items); // 去掉 ifOnu
-		$db = Infotables::field($field)->find($id);
+		$order_en = "1,6,10,15,17,23,28";
+		// instanceId,cName,ip,mPerson,mEmail,aEmail,extra
+		$order_cn = "1,6,10,15,17,23,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43";
+		$field = $this->getHeader("zx_apply-new-rb", $order_en, true);
+		$items = explode(",", $this->getHeader("zx_apply-new-rb", $order_cn));
+		$db = Infotables::field($field)->find($id)->toArray();
+		array_pop($items); // 移除 extra 的字段标题额外信息
 		// 转换 extra 信息
-		$extraHeader = config("extraInfo");
-		foreach ($extraHeader as $k => $v) {
-			if (array_key_exists($v, $db["extra"])) {
-				$db[$v] = $db["extra"][$v];
-				array_push($items, $k);
-			}
-			unset($db["extra"]);
+		foreach ($db["extra"] as $k => $v) {
+			$db[$k] = $v;
 		}
-		$values = array_values($db->toArray());
-		$title = config('idc.title_city') . 'IDC.ISP-' . $db->ip . "-" . $db->cName;
+		unset($db["extra"]);
+		$values = array_values($db);
+		$title = config('idc.title_city') . 'IDC.ISP-' . $db['cName'] . "-" . $db['ip'];
 		$contact = config('idc_contact');
 		$contact_str = implode(',', $contact);
 		$body = "--本邮件用来idc备案--";
@@ -256,16 +249,18 @@ class Index extends Common
 			$body .= "</tr>";
 		}
 		$body .= "</table>";
-		$body .= "<p style='color:#000;background-color:#ccc;font-size:12px;'>备案信息由客户经理<span style='color:blue'>" . $db->mPerson . "(" . $db->mEmail;
+		$body .= "<p style='color:#000;background-color:#ccc;font-size:12px;'>备案信息由客户经理<span style='color:blue'>" . $db['mPerson'] . "(" . $db['mEmail'];
 		$body .= ")</span>负责填写，并确保其完整性、准确性。<br>本邮件由辅助平台自动发送给厂家联系人：" . $contact_str . "，并抄送给 IP 地址管理员。</p>";
 		$body .= "如备案信息有误，请厂家联系人联系客户经理。由客户经理负责登陆辅助平台进行更正重新提交，或直接回复给厂家联系人。";
 		$address = $contact;
-		$address['CCm'] = $db->mEmail;
-		$address['CCa'] = $db->aEmail;
+		$address['CCm'] = $db['mEmail'];
+		$address['CCa'] = $db['aEmail'];
 		foreach (config("manageEmails") as $k => $v) {
 			$address['CC' . $k] = $v . "@ln.chinamobile.com";
 		}
-		$result = $this->sendEmail($address, $title, $body);
+		$attachment = Generator::generateIDCinfoFiles($id);
+		$result = $this->sendEmail($address, $title, $body, $attachment);
+		unlink($attachment);
 		return $this->result($result, is_bool($result) ? 1 : 0);
 	}
 
