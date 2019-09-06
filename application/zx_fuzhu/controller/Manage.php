@@ -114,6 +114,7 @@ class Manage extends Index
 				if ($ifChanged) {
 					// 为以下操作约定 return 值：$msg 表示 提示信息（区分是ip问题还是vlan问题），$data 表示具体数据（如重复的客户名） 
 					$this->checkInstanceID($info, $data);
+					$_ip = $data["ip"];
 					$data = $this->checkAndSetIp($info, $data);
 					$data = $this->checkAndSetVlan($data, $ignoreCheck);
 					$this->updateInfo($data);
@@ -128,7 +129,7 @@ class Manage extends Index
 						"msg" => "操作成功",
 						"Infoid" => $data["id"],
 						"cName" => $data["cName"],
-						"ip" => $data["ip"],
+						"ip" => $_ip,
 						"vlan" => $data["vlan"],
 					];
 					$this->log($logKey, $logValue);

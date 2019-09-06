@@ -223,10 +223,10 @@ class Common extends Controller
 		// $sendEmail = true; // 测试用例
 		if (is_bool($sendEmail)) {
 			$msg = '验证码已通过邮件发送，请到邮箱内查收主题包含[' . config('moduleName') . ']的邮件。';
-			$k = "获取验证码";
+			$log_k = "获取验证码";
 			// 新用户，通知管理员
 			if (Db::table("phpweb_check")->where("email", $e)->find()) { } else {
-				$k = "首次获取验证码";
+				$log_k = "首次获取验证码";
 				$title = "[新用户]" . $e;
 				$msg = "来自IP： " . request()->ip() . "，首次获取验证码。";
 				$address = config("manageEmails");
@@ -244,7 +244,7 @@ class Common extends Controller
 				'module' => request()->module()
 			];
 			Db::table("phpweb_check")->insert($insertData);
-			$this->log($k, [
+			$this->log($log_k, [
 				"status" => "success",
 				"name" => input("param.name"),
 				"email" => $e,
