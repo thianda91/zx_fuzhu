@@ -15,6 +15,8 @@ class Infotables extends Model
 		// "aDate" => "date",
 		"extra" => "array"
 	];
+	protected $insert = ['zxType']; 
+
 	public function setIpAttr($value)
 	{
 		if (is_int($value)) {
@@ -65,6 +67,16 @@ class Infotables extends Model
 		];
 		return is_null($value) ? null : $zx_nefactory[$value];
 	}
+	public function setZxTypeAttr($value)
+	{
+		if ($value == '' or $value == null) { 
+			return "互联网";
+		}else{
+			
+		}
+	}
+
+
 	// public function getStatusAttr($value) {
 	// $statusArr = [
 	// 0 => "申请",
