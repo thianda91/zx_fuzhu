@@ -311,11 +311,10 @@ class Generator extends Common
 			$cellValues["O" . $row] = $data["extra"]["county"]; // 单位所在县
 			$cellValues["P" . $row] = $data["cAddress"]; // 详细地址
 			$cellValues["Q" . $row] = $data["cPerson"]; // 联系人姓名
-			$cellValues["L" . $row] = $data["cAddress"]; // 客户地址
 			$cellValues["R" . $row] = $data["cPhone"] + 0; // 客户电话
 			$cellValues["S" . $row] = $data["cEmail"]; // 客户邮箱
 			$cellValues["T" . $row] = 1; // 网关IP地址类型
-			$cellValues["U" . $row] = substr($data["ip"], 0, strripos($data["ip"], ".") + 1); // 网关IP地址
+			$cellValues["U" . $row] = substr($data["ip"], 0, strripos($data["ip"], ".") + 1) . "1"; // 网关IP地址
 			$cellValues["V" . $row] = $data["extra"]["province"]; // 网关所在省
 			$cellValues["W" . $row] = $data["extra"]["city"]; // 网关所在市
 			$cellValues["X" . $row] = $data["extra"]["county"]; // 网关所在县

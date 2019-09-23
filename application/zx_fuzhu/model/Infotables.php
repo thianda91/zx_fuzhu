@@ -72,7 +72,7 @@ class Infotables extends Model
 		if ($value == '' or $value == null) { 
 			return "互联网";
 		}else{
-			
+			return $value;
 		}
 	}
 
