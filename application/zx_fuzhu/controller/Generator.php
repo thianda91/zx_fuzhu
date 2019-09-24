@@ -429,7 +429,7 @@ class Generator extends Common
 			$script .= "\n user-vlan " . $data["vlan"] . $rbp;
 			$script .= "\n bas\n #\n access-type layer2-subscriber default-domain authentication " . $data["domain"];
 			$script .= "\n authentication-method bind\n";
-			$script .= "static-user " . $data["ip"] . " " . $data["ip"] . " gateway " . substr($data["ip"], 0, strripos($data["ip"], ".") + 1) . "1 " . "interface " . $trunk . "." . $data["vlan"] . " vlan " . $data["vlan"] . " domain-name " . $data["domain"] . " detect\r\n";
+			$script .= "static-user " . $data["ip"] . " " . $data["ip"] . " gateway " . substr($data["ip"], 0, strripos($data["ip"], ".") + 1) . "1 " . "interface " . $trunk . "." . $data["vlan"] . " vlan " . $data["vlan"] . " domain-name " . $data["domain"] . " detect\r\n ";
 			return $script;
 		}
 		function the93($device9312, $data)
@@ -449,7 +449,7 @@ class Generator extends Common
 			}
 			$script .= "\ninterface " . $device9312[$down]; // 下行
 			$script .= "\nport trunk allow-pass vlan " . $data["vlan"];
-			$script .= "\nq\r\n";
+			$script .= "\nq\r\n ";
 			return $script;
 		}
 		$result = [

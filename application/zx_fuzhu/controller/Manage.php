@@ -255,7 +255,7 @@ class Manage extends Index
 				"aStationData" => implode(",", $aStation),
 				"colHeaderData" => $this->getHeader($zxTitle["label"], $zxTitle["order"]),
 				"colWidthsData" => $this->getColWidths($zxTitle["order"]),
-				"data" => $this->getInfoData()->toJson()
+				"data" => addslashes($this->getInfoData()->toJson()),
 			]);
 			return $this->fetch();
 		}

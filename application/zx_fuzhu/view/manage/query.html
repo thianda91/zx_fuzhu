@@ -118,8 +118,8 @@
     var colHeaderData = "{$colHeaderData}";
     var container = document.getElementById('queryTable');
     var infoData, hot, columnsData, contextMenuData;
-    //infoData = JSON.parse('{$data}');
-    infoData = {$data};
+    infoData = JSON.parse("{$data}");
+    //infoData = {$data};
     columnsData = [{
         data: 'create_time',
         type: "date",

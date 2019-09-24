@@ -213,7 +213,7 @@ class Common extends Controller
 			$vcode = rand(0, 9999);
 		} while (in_array($vcode, $codes));
 		$address = $e;
-		$subject = '[' . config('moduleName') . ']验证码：' . sprintf("%04s", $vcode) . '，可在30分钟内使用。';
+		$subject = '[' . config('moduleName') . ']验证码：' . sprintf("%04s", $vcode) . '，可在15天内重复使用。';
 		$body = '<p style="color:#088bff;">请确认是您申请了邮箱登录的验证码。若非本人操作，请忽略本邮件。</p><hr /><br /><br /><br /><br />
 				<div style="width:500px;padding:30px;background-color:#000;color:#bbb;"><p>Powered by 
 				<a style="color:#eee;font-weight:bold;" href="' . config('domain_name') . '")">' . config('copyright') . '</a></p>
