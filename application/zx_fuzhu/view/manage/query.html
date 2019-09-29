@@ -1,6 +1,4 @@
-{extend name="common@public/base" /}
-{block name="head"} {include file="common@c/_handsontable" /} {/block}
-{block name="leftmenu"} {include file="common/leftmenu_zx_apply_manage" /} {/block} {block name="main"}
+{extend name="common@public/base" /} {block name="head"} {include file="common@c/_handsontable" /} {/block} {block name="leftmenu"} {include file="common/leftmenu_zx_apply_manage" /} {/block} {block name="main"}
 <div class="htmltitle">
     <span class="h2" style="margin-right: 50px">信息查询</span>
     <span>请选择类别：</span>
@@ -28,10 +26,8 @@
             </select>
             <input type="text" class="form-control" id="searchStr">
         </div>
-        <button id="btn-search" type="submit" class="btn btn-default" data-toggle="tooltip" data-placement="top"
-            title="当前页搜索不限制列名，可搜索任意字段">当前页搜索</button>
-        <button id="btn-searchAll" class="btn btn-default" data-toggle="tooltip" data-placement="top"
-            title="全局搜索需根据列名搜索">全局搜索</button>
+        <button id="btn-search" type="submit" class="btn btn-default" data-toggle="tooltip" data-placement="top" title="当前页搜索不限制列名，可搜索任意字段">当前页搜索</button>
+        <button id="btn-searchAll" class="btn btn-default" data-toggle="tooltip" data-placement="top" title="全局搜索需根据列名搜索">全局搜索</button>
         <div id="tips" class="form-group" style="display: none; margin-left: 20px;">
             <span id="tips-text" class="text-primary"></span>
             <button id="tips-btn" class="btn btn-xs btn-primary">定位到下一个</button>
@@ -53,7 +49,7 @@
     $.ajaxSetup({
         cache: true,
     });
-    $(function ($) {
+    $(function($) {
         //$(".wtHolder")[0].style.height="";	//修复wtHolder层（handsontable右键菜单）height过大。
         $(".fixed-container").css("height", (_htmlHeight - 170) + "px");
         var tt = Date.now();
@@ -70,7 +66,7 @@
         id: "_msg",
         text: "loading..."
     });
-    var _loading = setTimeout(function () {
+    var _loading = setTimeout(function() {
         dhtmlx.message.hide("_msg");
         dhtmlx.message({
             id: "_msg",
@@ -87,7 +83,7 @@
         $.post("", {
             r: "info",
             zxType: this.name
-        }, function (data) {
+        }, function(data) {
             infoData = adjustInfo(data);
             hot.updateSettings({
                 data: infoData
@@ -97,7 +93,7 @@
     }
 </script>
 <script id="renderHandsontable">
-    (function (Handsontable) {
+    (function(Handsontable) {
         function ipstr(value, callback) {
             if (value == null || value.length == 0) {
                 callback(true);
@@ -130,12 +126,12 @@
     }, {
         data: 'instanceId',
         type: 'numeric'
-        /*}, {
-            data: 'zxType',
-            editor: 'select',
-            selectOptions: zxTypeData.split(","),
-        }, {
-            data: 'bandWidth',*/
+            /*}, {
+                data: 'zxType',
+                editor: 'select',
+                selectOptions: zxTypeData.split(","),
+            }, {
+                data: 'bandWidth',*/
     }, {
         data: 'neFactory',
         editor: 'select',
@@ -150,38 +146,38 @@
     }, {
         data: 'cName',
         allowEmpty: false
-        /*}, {
-            data : 'cAddress',
-        }, {
-            data : 'cNeeds',*/
+            /*}, {
+                data : 'cAddress',
+            }, {
+                data : 'cNeeds',*/
     }, {
         data: 'vlan',
         type: 'numeric',
         validator: /^2[0-9]{3}$/,
         readOnly: true
-        //allowEmpty: false
+            //allowEmpty: false
     }, {
         data: 'ip',
         validator: "my.ipstr",
         readOnly: true
-        /*}, {
-            data : 'ipB',
-            validator : "my.ipstr",
-            readOnly: true
-        }, {
-            data: 'cPerson',
-        }, {
-            data: 'cPhone',
-        }, {
-            data: 'cEmail',
-        }, {
-            data: 'mPerson',
-        }, {
-            data: 'mPhone',
-        }, {
-            data: 'mEmail',
-        }, {
-            data: 'marks',*/
+            /*}, {
+                data : 'ipB',
+                validator : "my.ipstr",
+                readOnly: true
+            }, {
+                data: 'cPerson',
+            }, {
+                data: 'cPhone',
+            }, {
+                data: 'cEmail',
+            }, {
+                data: 'mPerson',
+            }, {
+                data: 'mPhone',
+            }, {
+                data: 'mEmail',
+            }, {
+                data: 'marks',*/
     }, {
         data: 'ifOnu',
         editor: 'select',
@@ -227,7 +223,7 @@
     }];
     /* 初始化台账显示 */
     function initHandsontable(infoData) {
-        if (typeof (hot) != "undefined")
+        if (typeof(hot) != "undefined")
             hot = null;
         container.innerHTML = null;
         infoData = adjustInfo(infoData);
@@ -247,12 +243,12 @@
         hot.validateCells();
         hot.updateSettings({
             contextMenu: {
-                callback: function (key, options) {
+                callback: function(key, options) {
                     hot.disableShowDetail = true;
                     if (hot.getSelectedRange() === undefined) {
                         dhtmlx.alert("空白处右键操作是无效的~");
                     } else if (key === 'about') {
-                        setTimeout(function () {
+                        setTimeout(function() {
                             // timeout is used to make sure the menu collapsed before alert is shown
                             parent.dhtmlx.alert({
                                 title: "特别鸣谢",
@@ -266,7 +262,7 @@
                             _method: "PUT",
                             r: key,
                             id: getSelectedIds()
-                        }, function (data) {
+                        }, function(data) {
                             script(data);
                         });
                     } else if (key === 'show_status') {
@@ -286,7 +282,7 @@
                     } else {
                         // 导出数据模板
                         var r = new RegExp(',' + key + ',');
-                        if (r.test(',export_zg,export_jtip,export_gxbip,')) {
+                        if (r.test(',export_idc_isp,export_zg,export_jtip,export_gxbip,')) {
                             put(key);
                         }
                     }
@@ -299,6 +295,9 @@
                     "fullUpdate": {
                         name: "修改/查看"
                     },
+                    "export_idc_isp": {
+                        name: "0.icp备案模板导出"
+                    },
                     "export_zg": {
                         name: "1.资管流程数据导出"
                     },
@@ -310,7 +309,7 @@
                     },
                     "script": {
                         name: "4.单条数据制作脚本生成",
-                        disabled: function () {
+                        disabled: function() {
                             var s = hot.getSelectedRange();
                             var a = s && s.length > 1; // 多选时禁用
                             var b = s && s[0].from.row != s[0].to.row; // 多选时禁用
@@ -333,7 +332,7 @@
                         name: "**删除所选条目"
                     },
                     "show_status": {
-                        name: function () {
+                        name: function() {
                             var name;
                             if (sessionStorage.getItem("tableStatus") == "yes") {
                                 name = "隐藏台账状态";
@@ -350,22 +349,22 @@
             }
         });
         hot.updateSettings({
-            afterSelectionEndByProp: function (r, c, r2, c2) {
+            afterSelectionEndByProp: function(r, c, r2, c2) {
                 if (r == r2 && c == c2 && !dhxWins.isWindow("ccc")) {
                     //console.log(r, c, r2, c2);
                     showDetail(r);
                 }
             },
-            afterOnCellMouseOver: function (event, coords, td) {
+            afterOnCellMouseOver: function(event, coords, td) {
                 //console.log(event,coords,td);
-                hot.validateRows([coords.row], function (valid) {
+                hot.validateRows([coords.row], function(valid) {
                     hot.currentRowValid = {
                         row: coords.row,
                         valid: valid
                     }; // 触发设置当前行的验证结果
                 });
             },
-            afterChange: function (changes, source) { // 修改后自动同步到数据库
+            afterChange: function(changes, source) { // 修改后自动同步到数据库
                 var updates = {},
                     _id = [],
                     rows = [],
@@ -395,7 +394,7 @@
                         text: "确认后所有的修改会同步到服务器，本次登陆期间不再提醒。不会验证数据是否合规，慎用！！<br><br>【请注意】：若多人同时操作会以最后一次修改为准。操作请谨慎。。&nbsp;&nbsp;%^_^% +_+ %^_^%",
                         ok: "确认",
                         cancel: "撤销修改",
-                        callback: function (result) {
+                        callback: function(result) {
                             if (result) {
                                 sessionStorage.setItem("updateConfirm", "auto");
                                 updateChanges(rows, updates);
@@ -409,7 +408,7 @@
                 }
 
             },
-            afterRender: function () {
+            afterRender: function() {
                 initStatusSync();
             }
         });
@@ -435,7 +434,7 @@
         if (sessionStorage.getItem("updateConfirm") === null) {
             return;
         }
-        hot.validateRows(rows, function (valid) {
+        hot.validateRows(rows, function(valid) {
             if (!valid) { // 验证修改是否符合验证规则
                 dhtmlx.confirm({
                     text: "修改操作明显不合规，<b>建议修改合规后再试。</b>是否强制继续？",
@@ -452,7 +451,7 @@
     }
     /* 发起post请求更新台账信息，并同步在前端render 用于 updateChanges、updateStatus */
     function postUpdate(updates) {
-        $.post("?r=update", updates, function (data) {
+        $.post("?r=update", updates, function(data) {
             console.log("ajaxResponse_update", updates);
             if (data.code) {
                 dhtmlx.message("成功同步至服务器条数：" + data.msg + "<br /><span style='color:red'>---<br />" + JSON.stringify(updates) +
@@ -466,7 +465,7 @@
             } else {
                 dhtmlx.alert({
                     text: data.msg,
-                    callback: function () {
+                    callback: function() {
                         location.href = data.url
                     }
                 }); //异常时跳转
@@ -475,12 +474,12 @@
     }
 
     function initSearch() {
-        $("#searchStr").on("focus", function () {
+        $("#searchStr").on("focus", function() {
             checkWindows("_input");
         });
         hot.search = hot.getPlugin('search');
         /* 当前页搜索按钮 */
-        Handsontable.dom.addEvent(document.getElementById("searchStr"), "keyup", function () {
+        Handsontable.dom.addEvent(document.getElementById("searchStr"), "keyup", function() {
             if (this.value == "") {
                 showTips("");
             } else {
@@ -500,7 +499,7 @@
                 checkWindows("_input");
             }
         });
-        $("#btn-search").on("click", function () {
+        $("#btn-search").on("click", function() {
             var str = $("#searchStr").val();
             if (str == "") {
                 showTips("");
@@ -514,7 +513,7 @@
             }
         });
         /* 数据库搜索按钮 */
-        $("#btn-searchAll").on("click", function () {
+        $("#btn-searchAll").on("click", function() {
             var str = $("#searchStr").val();
             var zxType = $(".htmltitle button.active").prop("name");
             if (str == "") {
@@ -522,7 +521,7 @@
                 $.post("", {
                     r: "info",
                     zxType: zxType
-                }, function (data) {
+                }, function(data) {
                     infoData = adjustInfo(data);
                     hot.updateSettings({
                         data: infoData
@@ -538,7 +537,7 @@
                     r: "search",
                     where: _where,
                     zxType: zxType
-                }, function (data) {
+                }, function(data) {
                     infoData = adjustInfo(data);
                     hot.updateSettings({
                         data: infoData
@@ -548,7 +547,7 @@
             }
         });
         /* 定位下一个按钮 */
-        $("#tips-btn").on("click", function () {
+        $("#tips-btn").on("click", function() {
             var result = JSON.parse(sessionStorage.getItem("searchResult"));
             var index = parseInt(sessionStorage.getItem("searchResultSelectedIndex"));
             if (++index == result.length) {
@@ -570,7 +569,7 @@
     }
     /* 按钮后面的提示信息 */
     function showTips(msg, muti) {
-        if (typeof (muti) != "undefined") {
+        if (typeof(muti) != "undefined") {
             $("#tips-msg").html(msg);
             $("#tips").fadeIn(500);
             $("#tips-text").html("找到 " + muti + " 个结果。");
@@ -690,7 +689,7 @@
                 }
             }
         }
-        result = result.sort(function (a, b) {
+        result = result.sort(function(a, b) {
             return a - b;
         });
         return result;
@@ -706,9 +705,9 @@
             dhtmlx.alert(scriptObj.msg);
             return;
         }
-        if (typeof (show_bas) == "undefined") {
+        if (typeof(show_bas) == "undefined") {
             // 加载一次。
-            $.get("../tool/_script.html", function (data) {
+            $.get("../tool/_script.html", function(data) {
                 $(".content").append(data);
                 showScript(scriptObj);
             });
@@ -719,19 +718,20 @@
     }
     /* 显示数据制作脚本 用在 script */
     function showScript(scriptObj) {
-        if (typeof (scriptObj.bas01 != "undefined")) {
+        if (typeof(scriptObj.bas01 != "undefined")) {
             show_bas("01", scriptObj.bas01);
         }
-        if (typeof (scriptObj.bas02 != "undefined")) {
+        if (typeof(scriptObj.bas02 != "undefined")) {
             show_bas("02", scriptObj.bas02);
         }
-        if (typeof (scriptObj.the93 != "undefined")) {
+        if (typeof(scriptObj.the93 != "undefined")) {
             show_9312(scriptObj.the93[0], scriptObj.the93[1]);
         }
     }
     /* 导出到其他系统模板 */
     function put(key) {
-        var ifUsePHP = $("#usePHP").prop("checked") == true ? 1 : 0;
+        var ifUsePHP = $("#usePHP").prop("checked") == true || key == 'export_idc_isp' ? 1 : 0;
+        console.log(ifUsePHP,key,$("#usePHP").prop("checked"));
         var args = {
             _method: "PUT",
             r: key,
@@ -757,7 +757,7 @@
         } else {
             /* 前端XLSX生成excel */
             sessionStorage.setItem("export_key", key);
-            $.post("?f=" + key, args, function (data) {
+            $.post("?f=" + key, args, function(data) {
                 jsGetXLSX(exportExcel, data);
             });
 
@@ -786,12 +786,12 @@
         }
         console.log("\t\tput(key):submit:", args);
         if (key !== 'export_zg') return; // 仅export_zg后执行
-        setTimeout(function (rows) {
+        setTimeout(function(rows) {
             var _status = 3;
             dhtmlx.confirm({
                 title: "自动修改状态？",
                 text: "是否修改导出项的状态为：<br><br><button class='btn btn-xs' style='background-color:" + backgroundColor[_status] + "'>" + info_status[_status] + "</button>",
-                callback: function (result) {
+                callback: function(result) {
                     if (result) {
                         updateStatusMulti(rows, _status);
                     }
@@ -825,7 +825,7 @@
             width: "600px",
             ok: "删除",
             cancel: "点错了",
-            callback: function (result) {
+            callback: function(result) {
                 if (!result) {
                     return;
                 } else {
@@ -838,7 +838,7 @@
             $.post("", {
                 r: "delete",
                 id: ids
-            }, function (data) {
+            }, function(data) {
                 if (data == ids.length) {
                     // hot 前端组件同步删除,基于数组的index
                     // 使用splice函数会改变数组本身，批量操作时从后往前执行不会出错。
@@ -873,18 +873,18 @@
         if (typeof _formAjax != "undefined") {
             form_init(infoData[rowId]);
         } else {
-            $.get("../common/_form_structure.html", function (data1) {
+            $.get("../common/_form_structure.html", function(data1) {
                 $("body").after(data1);
                 // 添加提交按钮
                 formStructure.push(btnStructure);
                 // 移除 备案信息的必填要求
                 var list = beianStructure[1]['list'];
-                for (var i in list){
+                for (var i in list) {
                     delete list[i]['required'];
                 }
                 // 合并表单结构
                 formStructure = formStructure.concat(beianStructure);
-                $.get("../common/_form_config.html", function (data2) {
+                $.get("../common/_form_config.html", function(data2) {
                     $("body").append(data2);
                     window._formAjax = 1;
                     form_init(infoData[rowId]);
@@ -926,7 +926,7 @@
         myForm.updates = {};
         sessionStorage.setItem("formDataBackups", myForm.saveBackup());
         myForm.attachEvent("onChange", onChangeHandler);
-        myForm.attachEvent("onChange", function (name, value, state) {
+        myForm.attachEvent("onChange", function(name, value, state) {
             // example: updates={"16-1741":{vlan:"2222",ip:"223.100.108.2"}}
             var rowId = sessionStorage.getItem("selected_rowId");
             var id = sessionStorage.getItem("selected_id");
@@ -945,7 +945,7 @@
         });
         //formStructure = null;
         window.evId == null || myForm.detachEvent("evId");
-        evId = myForm.attachEvent("onButtonClick", function (id) {
+        evId = myForm.attachEvent("onButtonClick", function(id) {
             if (id == "commit") {
                 if (myForm.validate()) {
                     var num = removeSpace();
@@ -1007,10 +1007,10 @@
                 _method: "PUT",
                 r: "export",
                 zxType: typename
-            }, function (data) {
+            }, function(data) {
                 var exportData = data.data;
-                var colHeader = typeof (data.colHeader) != "undefined" && data.colHeader.split(",");
-                var colName = typeof (data.colName) != "undefined" && data.colName.split(",");
+                var colHeader = typeof(data.colHeader) != "undefined" && data.colHeader.split(",");
+                var colName = typeof(data.colName) != "undefined" && data.colName.split(",");
                 data = [];
                 var extra = "";
                 if (colHeader) {
@@ -1039,7 +1039,7 @@
     }
     /* 获取 XLSX 后继续执行 */
     function jsGetXLSX(func, arg) {
-        if (typeof (XLSX) == "object") {
+        if (typeof(XLSX) == "object") {
             func(arg);
             return;
         }
@@ -1047,7 +1047,7 @@
         if (/10./.test(document.location.host)) {
             url = "__STATIC__/sheetjs/xlsx.full.min.js";
         }
-        $.getScript(url, function () {
+        $.getScript(url, function() {
             func(arg);
         });
     }
@@ -1179,7 +1179,7 @@
             caption: "9312互联端口明细",
         });
 
-        $.get("_get_device9312_info.html", function (data) {
+        $.get("_get_device9312_info.html", function(data) {
             var deviceInfo = JSON.parse(data);
             var tbodyHtml = '';
             tbodyHtml +=

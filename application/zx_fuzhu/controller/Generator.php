@@ -14,9 +14,10 @@ class Generator extends Common
 	 *
 	 * @param string|array $ids 
 	 * @param integer $type 类型决定 sheets 表样，目前仅包含 type2
+	 * @param string $output 输出方式：fileName(默认，当附件自动发邮件)、 
 	 * @return void
 	 */
-	public static function generateIDCinfoFiles($ids = null, $type = 2)
+	public static function generateIDCinfoFiles($ids = null,  $output = 'fileName', $type = 2)
 	{
 		if (!is_array($ids)) {
 			$ids = explode(",", $ids);
@@ -105,7 +106,9 @@ class Generator extends Common
 			$extra = getArrayValue($data, "extra");
 			$nullVal = null;
 			$credential = $extra ? getArrayValue($extra, "credential") ? config("credential")[getArrayValue($extra, "credential")] : $nullVal : $nullVal;
+			// unitProperty 与 unitAttribute 应该相同
 			$unitProperty = $extra ? getArrayValue($extra, "unitProperty") ? config("unitProperty")[getArrayValue($extra, "unitProperty")] : $nullVal : $nullVal;
+			// $unitAttribute = $extra ? getArrayValue($extra, "unitAttribute") : $nullVal;
 			if (in_array("表4", $sheets[$type])) {
 				$cellValues["表4"]["A" . $row] = $data["ip"]; // ip
 				$cellValues["表4"]["B" . $row] = $data["ip"]; // ip
@@ -162,24 +165,24 @@ class Generator extends Common
 		$spreadsheet->getProperties()->setCreator(config('copyright'));
 		$spreadsheet->getProperties()->setLastModifiedBy(config('copyright'));
 		$writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($spreadsheet, "Xlsx");
-		// header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'); // 告诉浏览器数据excel07文件
-		// header('Content-Disposition: attachment;filename="' . $fileName . '"'); // 告诉浏览器将输出文件的名称
-		// header('Cache-Control: max-age=0'); // 禁止缓存
-		// $writer->save("php://output");
-		$dir = "../runtime/temp/";
 		$fileName = config('idc.title_city') . 'IDC.ISP-' . $data["ip"] . "-" . $data["cName"] . '.xlsx';
-		// $tmp = time(). '.xlsx';
-		// $writer->save($dir . $tmp);
-		$writer->save($dir . $fileName);
-		$spreadsheet->disconnectWorksheets();
-		unset($spreadsheet);
-		unset($writer);
-		// if (file_exists($dir . $fileName) || !file_exists($dir . $tmp)) {
-		// 	return -1;	// idc.isp附件生成失败
-		// } else {
-		// 	return rename($dir . $fileName, $dir . $tmp) ? $dir . $fileName : 0;
-		// }
-		return $dir . $fileName;
+		if ($output == 'fileName') {
+			$dir = "../runtime/temp/";
+			$writer->save($dir . $fileName);
+			$spreadsheet->disconnectWorksheets();
+			unset($spreadsheet);
+			unset($writer);
+			return $dir . $fileName;
+		}
+		if ($output == 'httpResponse') {
+			header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'); // 告诉浏览器数据excel07文件
+			header('Content-Disposition: attachment;filename="' . $fileName . '"'); // 告诉浏览器将输出文件的名称
+			header('Cache-Control: max-age=0'); // 禁止缓存
+			$writer->save("php://output");
+			$spreadsheet->disconnectWorksheets();
+			unset($spreadsheet);
+			unset($writer);
+		}
 	}
 	public static function generateZgWorkflow($ids = null)
 	{

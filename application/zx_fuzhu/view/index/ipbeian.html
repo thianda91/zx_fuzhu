@@ -1,10 +1,9 @@
-{extend name="common@public/base" /}{block name="leftmenu"}{include file="common/leftmenu_zx_apply_index" /}{/block}
-{block name="head"}
+{extend name="common@public/base" /}{block name="leftmenu"}{include file="common/leftmenu_zx_apply_index" /}{/block} {block name="head"}
 <style>
     #form_container {
         width: 900px;
     }
-
+    
     .tips p {
         padding: 15px;
     }
@@ -14,9 +13,7 @@
     <span class="h2" style="margin-right:50px">IP 备案信息填写</span>
 </div>
 <div class="tips">
-    <p class="bg-warning">如表单中的下拉菜单无法正常显示，请更换浏览器访问。比如：<a
-            href="https://www.mozilla.org/zh-CN/firefox/all/">火狐浏览器(firefox)</a>、<a
-            href="https://www.google.cn/intl/zh-CN/chrome/">谷歌浏览器(chrome)</a>。</p>
+    <p class="bg-warning">如表单中的下拉菜单无法正常显示，请更换浏览器访问。比如：<a href="https://www.mozilla.org/zh-CN/firefox/all/">火狐浏览器(firefox)</a>、<a href="https://www.google.cn/intl/zh-CN/chrome/">谷歌浏览器(chrome)</a>。</p>
 </div>
 <div id="form_container"></div>
 {/block} {block name="script"} {include file="common/_form_structure" /} {include file="common/_form_config" /}
@@ -28,28 +25,43 @@
     var c_name_struct = formStructure[1].list[6];
     c_name_struct['type'] = 'combo';
     myForm.addItem('ip_bak', c_name_struct, 0, 0);
-    $.post("", { "_method": "PUT", "r": "get_cnames" }, function (data) {
+    $.post("", {
+        "_method": "PUT",
+        "r": "get_cnames"
+    }, function(data) {
         config['cname_check'] = data; // 提交前校验用
         for (var i in data) {
             myForm.getCombo('cName').addOption(i, data[i]);
         }
     });
-    myForm.setValidation('cName', function (data) {
+    myForm.setValidation('cName', function(data) {
         return data in config['cname_check'];
     });
     initCombo();
     myForm.attachEvent("onChange", onChangeHandler);
-    myForm.getCombo("cName").attachEvent("onChange", function (value, text) {
+    myForm.getCombo("cName").attachEvent("onChange", function(value, text) {
         if (sessionStorage.getItem('ipbeian_cName') != value) {
+            myForm.forEachItem(function(name){
+                initCombo();
+                myForm.setItemValue(name, '');
+            });
             sessionStorage.setItem('ipbeian_cName', value);
-            $.post("", { "_method": "PUT", "r": "get_detail", "id": value }, function (_data) {
+            $.post("", {
+                "_method": "PUT",
+                "r": "get_detail",
+                "id": value
+            }, function(_data) {
+                for (var i in _data["extra"]) {
+                    _data[i] = _data["extra"][i];
+                }
+                delete _data["extra"];
                 myForm.loadStruct({
                     data: _data
                 });
             });
         }
     });
-    myForm.attachEvent("onButtonClick", function (id) {
+    myForm.attachEvent("onButtonClick", function(id) {
         if (id == "commit") {
             if (myForm.validate()) {
                 var num = removeSpace();
@@ -59,16 +71,16 @@
                 }
                 var myData = myForm.getFormData();
                 for (var i in myData) {
-                    if (typeof (myData[i]) != "undefined") {
+                    if (typeof(myData[i]) != "undefined") {
                         // 去空格
                         myData[i] = String(myData[i]).replace(/ /g, "");
                     }
                 }
-                $.post("", myData, function (data) {
+                $.post("", myData, function(data) {
                     data.code == 1 && dhtmlx.alert({
                         title: "&nbsp;",
                         text: "操作成功。已自动发送 idc 备案邮件。",
-                        callback: function () {
+                        callback: function() {
                             history.go(0);
                         },
                     });

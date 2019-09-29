@@ -215,6 +215,7 @@ class Manage extends Index
 		$contact = config('idc_contact');
 		$contact_str = implode(',', $contact);
 		$body = "<p>请 <b>" . $db->mPerson . "</b> 及时填写 IDC/ISP 备案信息：</p>" . $this->todo_link_str('index/ipbeian');
+		$body .= "<p>登陆时使用当前邮箱登陆： <b>" . $db->mEmail . "</b> 。别填错了哦，否则无法填写备案信息！</p>";
 		$body .= "<hr><p>请 <b>" . $db->aPerson . "</b> 阅知。</p>";
 		$body .= "<br><table style='border-collapse:collapse;border:none;'>";
 		for ($i = 0; $i < count($items); $i++) {
@@ -272,6 +273,7 @@ class Manage extends Index
 		if (request()->isPut()) {
 			// 相关操作
 			input("post.r") == "script" && $data = Generator::generateScript(input("post.id/a")[0]);
+			input("post.r") == "export_idc_isp" && $data = Generator::generateIDCinfoFiles(input("post.id"), 'httpResponse');
 			input("post.r") == "export_zg" && $data = Generator::generateZgWorkflow(input("post.id"));
 			input("post.r") == "export_jtip" && $data = Generator::generateJtIp(explode(",", input("post.id")));
 			input("post.r") == "export_gxbip" && $data = Generator::generateGxbIp(explode(",", input("post.id")));

@@ -215,12 +215,17 @@ class Index extends Common
 				return $result;
 			}
 			if (input("param.r") == "get_detail" && input("?param.id")) {
-				$result = Infotables::get(input("param.id"));
+				$order_en = '6,12,13,14,28';
+				$field = $this->getHeader("zx_apply-new-rb", $order_en, true);
+				$result = Infotables::field($field)->select(input("param.id"))[0];
 				return $result;
 			}
 		}
 	}
-
+	public function tt()
+	{
+		return dump($this->getHeader("zx_apply-new-rb", '6,10,3,39,40,32,33,38,7,43,23'));
+	}
 	/**
 	 * 发送 IDC 备案信息给厂家联系人
 	 *
@@ -229,27 +234,29 @@ class Index extends Common
 	 */
 	public function sendBeiAnResultEmail($id = '')
 	{
-		$order_en = "1,6,10,15,17,23,28";
-		// instanceId,cName,ip,mPerson,mEmail,aEmail,extra
-		$order_cn = "1,6,10,15,17,23,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43";
+		$order_en = "6,10,3,15,17,23,28,7";
+		// cName,ip,bandWidth,mPerson,mEmail,aEmail,extra,cAddress
+		$order_cn = "6,10,3,39,40,33,38,7,43,23";
 		$field = $this->getHeader("zx_apply-new-rb", $order_en, true);
-		$items = explode(",", $this->getHeader("zx_apply-new-rb", $order_cn));
+		// 获取表格标题
+		$header_cn = explode(",", $this->getHeader("zx_apply-new-rb", $order_cn));
+		$header_en = explode(",", $this->getHeader("zx_apply-new-rb", $order_cn, true));
+		// 获取表格内容
 		$db = Infotables::field($field)->find($id)->toArray();
-		array_pop($items); // 移除 extra 的字段标题额外信息
-		// 转换 extra 信息
+		// 转换表格内容的 extra 信息
 		foreach ($db["extra"] as $k => $v) {
 			$db[$k] = $v;
 		}
 		unset($db["extra"]);
-		$values = array_values($db);
+		//$values = array_values($db);
 		$title = config('idc.title_city') . 'IDC.ISP-' . $db['cName'] . "-" . $db['ip'];
 		$contact = config('idc_contact');
 		$contact_str = implode(',', $contact);
 		$body = "--本邮件用来idc备案--";
 		$body .= "<br><table style='border-collapse:collapse;border:none;'>";
-		for ($i = 0; $i < count($items); $i++) {
+		for ($i = 0; $i < count($header_cn); $i++) {
 			$body .= "<tr>";
-			$body .= "<th style='width:200px;border:solid #666 1px;'>" . $items[$i] . "</th><td style='width:500px;border:solid #666 1px;'>" . $values[$i] . "</td>";
+			$body .= "<th style='width:200px;border:solid #666 1px;'>" . $header_cn[$i] . "</th><td style='width:500px;border:solid #666 1px;'>" . $db[$header_en[$i]] . "</td>";
 			$body .= "</tr>";
 		}
 		$body .= "</table>";
