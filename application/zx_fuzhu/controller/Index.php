@@ -211,7 +211,7 @@ class Index extends Common
 		}
 		if (request()->isPut()) {
 			if (input("param.r") == "get_cnames") {
-				$result = Infotables::where('mEmail', session('user.email'))->where('status', '<', 2)->order('id desc')->column('id,cName');
+				$result = Infotables::where('mEmail', session('user.email'))->where('status', '<', 3)->order('id desc')->column('id,cName');
 				return $result;
 			}
 			if (input("param.r") == "get_detail" && input("?param.id")) {
