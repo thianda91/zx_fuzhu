@@ -431,7 +431,9 @@ class Generator extends Common
 			$script .= "\n description [LNTIL-MA-CMNET-BAS" . $_bas_name[$bas] . "ME60X]" . $trunk . "." . $data["vlan"] . "-[" . $data["desc"] . "]";
 			$script .= "\n user-vlan " . $data["vlan"] . $rbp;
 			$script .= "\n bas\n #\n access-type layer2-subscriber default-domain authentication " . $data["domain"];
-			$script .= "\n authentication-method bind\n";
+			$script .= "\n authentication-method bind";
+			$script .= "\n ip-trigger";
+			$script .= "\n arp-trigger\n";
 			$script .= "static-user " . $data["ip"] . " " . $data["ip"] . " gateway " . substr($data["ip"], 0, strripos($data["ip"], ".") + 1) . "1 " . "interface " . $trunk . "." . $data["vlan"] . " vlan " . $data["vlan"] . " domain-name " . $data["domain"] . " detect\r\n ";
 			return $script;
 		}
